@@ -18,8 +18,8 @@ public class NodeIterator implements Iterator<Node> {
 
 	@Override
 	public boolean hasNext() {
-		return current != null && current.getParent() != null
-				&& current != root;
+		return current != null
+				&& (!killedFirst || (current.getParent() != null && current != root));
 	}
 
 	@Override
@@ -28,6 +28,7 @@ public class NodeIterator implements Iterator<Node> {
 			killedFirst = true;
 			return current;
 		}
+
 		int nextIDX = current.getParent().getChildren().indexOf(current) + 1;
 		if (nextIDX >= current.getParent().getChildren().size()) {
 			current = current.getParent();
