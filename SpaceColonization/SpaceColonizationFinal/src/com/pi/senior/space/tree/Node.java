@@ -10,9 +10,11 @@ public class Node {
 	private List<Node> children = new ArrayList<Node>();
 	private Node parent;
 	private Vector position;
+	private Vector direction; // Cached for better performance
 
 	public Node(Vector position) {
 		this.position = position;
+		this.direction = new Vector(0, 1, 0);
 	}
 
 	public void addChild(Node child) {
@@ -35,6 +37,7 @@ public class Node {
 		}
 
 		child.parent = this;
+		child.direction = child.position.clone().subtract(position).normalize();
 		children.add(child);
 	}
 
@@ -44,6 +47,10 @@ public class Node {
 
 	public Node getParent() {
 		return parent;
+	}
+
+	public Vector getDirection() {
+		return direction;
 	}
 
 	public List<Node> getChildren() {

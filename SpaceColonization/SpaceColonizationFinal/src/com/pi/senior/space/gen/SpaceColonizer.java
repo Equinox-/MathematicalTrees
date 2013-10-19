@@ -17,8 +17,9 @@ import com.pi.senior.space.tree.NodeIterator;
 
 public class SpaceColonizer {
 	private static final int ATTRACTOR_COUNT = 1000;
-	private static final float ATTRACTOR_KILL_RADIUS_SQUARED = 1;
+	private static final float ATTRACTOR_KILL_RADIUS_SQUARED = 0.25f;
 	private static final float ATTRACTOR_ATTRACTION_RADIUS_SQUARED = 10;
+	private static final float INODE_LENGTH = 0.5f;
 
 	private Node rootNode;
 	private Envelope populationArea;
@@ -52,13 +53,27 @@ public class SpaceColonizer {
 			Iterator<Node> ndIterator = new NodeIterator(rootNode);
 			double bestDist = Double.MAX_VALUE;
 			Node bestNd = null;
+			Vector bestDirection = null;
 			while (ndIterator.hasNext()) {
 				Node nd = ndIterator.next();
 				double dist2 = nd.getPosition().distSquared(v);
 				if (dist2 < ATTRACTOR_ATTRACTION_RADIUS_SQUARED
 						&& dist2 < bestDist) {
-					bestNd = nd;
-					bestDist = dist2;
+
+					Vector testDirection = v.clone().subtract(nd.getPosition())
+							.normalize();
+					if (nd.getDirection() != null) {
+						double angleOfChange = Math.abs(Math.acos(Vector
+								.dotProduct(testDirection, nd.getDirection())));
+						dist2 *= (angleOfChange);
+					} else {
+						dist2 *= Math.PI / 2f;
+					}
+					if (dist2 < bestDist) {
+						bestDirection = testDirection;
+						bestNd = nd;
+						bestDist = dist2;
+					}
 				}
 			}
 			if (bestNd != null) {
@@ -67,7 +82,7 @@ public class SpaceColonizer {
 					curr = new Vector(0, 0, 0);
 					attractions.put(bestNd, curr);
 				}
-				curr.add(v.clone().subtract(bestNd.getPosition()).normalize());
+				curr.add(bestDirection);
 			}
 		}
 		System.out.println("Generated " + attractions.size()
@@ -78,7 +93,7 @@ public class SpaceColonizer {
 		// Add the new nodes
 		Set<Entry<Node, Vector>> dirSet = attractions.entrySet();
 		for (Entry<Node, Vector> dirSpec : dirSet) {
-			dirSpec.getValue().normalize();
+			dirSpec.getValue().normalize().multiply(INODE_LENGTH);
 			dirSpec.getKey().addChild(
 					new Node(dirSpec.getKey().getPosition().clone()
 							.add(dirSpec.getValue())));
@@ -94,12 +109,8 @@ public class SpaceColonizer {
 		while (attractionItr.hasNext()) {
 			Iterator<Node> nodes = new NodeIterator(rootNode);
 			Vector kill = attractionItr.next();
-			int count = 0;
 			while (nodes.hasNext()) {
 				Node next = nodes.next();
-				if (count++ > nodeCount){
-					System.out.println("Confusion: " + count + next + (next.getParent()));
-				}
 				if (kill.distSquared(next.getPosition()) < ATTRACTOR_KILL_RADIUS_SQUARED) {
 					attractionItr.remove();
 					break;
