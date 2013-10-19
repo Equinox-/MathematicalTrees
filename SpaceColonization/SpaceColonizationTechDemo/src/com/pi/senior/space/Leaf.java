@@ -1,5 +1,7 @@
 package com.pi.senior.space;
 
+import com.pi.senior.math.Vector;
+
 public class Leaf extends Vector {
 	private float rotation;
 

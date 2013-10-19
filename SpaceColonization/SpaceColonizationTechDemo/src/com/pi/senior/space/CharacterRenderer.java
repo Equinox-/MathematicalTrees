@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.pi.senior.math.Vector;
+
 public class CharacterRenderer {
 	public static final int MARGINS = 25;
 	public static final int ASSUME_PADDING = -5;
