@@ -17,9 +17,10 @@ import com.pi.senior.space.tree.NodeIterator;
 
 public class SpaceColonizer {
 	private static final int ATTRACTOR_COUNT = 1000;
-	private static final float ATTRACTOR_KILL_RADIUS_SQUARED = 0.25f;
-	private static final float ATTRACTOR_ATTRACTION_RADIUS_SQUARED = 10;
+	private static final float ATTRACTOR_KILL_RADIUS_SQUARED = 2f;
+	private static final float ATTRACTOR_ATTRACTION_RADIUS_SQUARED = 100;
 	private static final float INODE_LENGTH = 0.5f;
+	private static final float IDEAL_BRANCH_SLOPE = 0.5f; // 0.5 up for 1 over
 
 	private Node rootNode;
 	private Envelope populationArea;
@@ -59,9 +60,11 @@ public class SpaceColonizer {
 				double dist2 = nd.getPosition().distSquared(v);
 				if (dist2 < ATTRACTOR_ATTRACTION_RADIUS_SQUARED
 						&& dist2 < bestDist) {
-
+					// Compare the current branch direction with the direction
+					// this branch will cause.
 					Vector testDirection = v.clone().subtract(nd.getPosition())
 							.normalize();
+
 					if (nd.getDirection() != null) {
 						double angleOfChange = Math.abs(Math.acos(Vector
 								.dotProduct(testDirection, nd.getDirection())));
@@ -69,6 +72,19 @@ public class SpaceColonizer {
 					} else {
 						dist2 *= Math.PI / 2f;
 					}
+
+					// A second bias is to compare to the root of the tree. In
+					// general branches should extend away from the root of the
+					// tree on the XZ plane.
+					Vector centerOfTreeDirection = v.clone().subtract(
+							rootNode.getPosition());
+					// We want to assume perfectly flat branching structures
+					centerOfTreeDirection.y = IDEAL_BRANCH_SLOPE;
+					centerOfTreeDirection.normalize();
+					double angleOfChange = Math.abs(Math.acos(Vector
+							.dotProduct(centerOfTreeDirection, testDirection)));
+					dist2 *= (angleOfChange);
+
 					if (dist2 < bestDist) {
 						bestDirection = testDirection;
 						bestNd = nd;
