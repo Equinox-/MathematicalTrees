@@ -48,7 +48,7 @@ public class SpaceColonizer {
 		}
 		System.out.println("Generated " + attractors.size() + " attractors in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
-		
+
 		killOffAttractors();
 	}
 
@@ -132,10 +132,11 @@ public class SpaceColonizer {
 		Set<Entry<Node, Vector>> dirSet = attractions.entrySet();
 		for (Entry<Node, Vector> dirSpec : dirSet) {
 			dirSpec.getValue().normalize().multiply(INODE_LENGTH);
-			dirSpec.getKey().addChild(
+			if (dirSpec.getKey().addChild(
 					new Node(dirSpec.getKey().getPosition().clone()
-							.add(dirSpec.getValue())));
-			nodeCount++;
+							.add(dirSpec.getValue())))) {
+				nodeCount++;
+			}
 		}
 		System.out.println("Added " + attractions.size() + " new nodes in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");

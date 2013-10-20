@@ -9,7 +9,8 @@ import com.pi.senior.math.Vector;
 public class Node {
 	private static final float RADI_PER_CROSS_SECTION = 0.035f;
 	private static final float TIP_CROSS_SECTION = 1f;
-	public static final float ACCUM_CROSS_SECTION = 0.25f;
+	public static final float ACCUM_CROSS_SECTION = 0.1f;
+	private static final float NODE_CHILD_TOLERANCE = 0.1f;
 
 	private List<Node> children = new ArrayList<Node>();
 	private Node parent;
@@ -22,9 +23,9 @@ public class Node {
 		this.direction = new Vector(0, 1, 0);
 	}
 
-	public void addChild(Node child) {
+	public boolean addChild(Node child) {
 		if (child.parent == this) {
-			return;
+			return false;
 		}
 		if (child.parent != null) {
 			throw new IllegalArgumentException(
@@ -41,9 +42,18 @@ public class Node {
 			tmpParent = tmpParent.getParent();
 		}
 
+		// Does this parent already have a node near there?
+		for (Node n : children) {
+			if (n.getPosition().dist(child.getPosition()) < NODE_CHILD_TOLERANCE) {
+				// Assume they are the same
+				return false;
+			}
+		}
+
 		child.parent = this;
 		child.direction = child.position.clone().subtract(position).normalize();
 		children.add(child);
+		return true;
 	}
 
 	public Vector getPosition() {
@@ -90,7 +100,7 @@ public class Node {
 	}
 
 	public float getRadius() {
-		return (float) Math.pow(crossSection, 0.35) * RADI_PER_CROSS_SECTION;
+		return (float) Math.log(crossSection) * RADI_PER_CROSS_SECTION;
 	}
 
 	public float getCrossSection() {
