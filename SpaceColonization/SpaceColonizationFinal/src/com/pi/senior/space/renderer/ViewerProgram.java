@@ -27,8 +27,8 @@ public class ViewerProgram {
 
 	public ViewerProgram() {
 		colonizer = new SpaceColonizer(new Node(new Vector(0, 0, 0)),
-				new EllipsoidEnvelope(new Vector(0, 25, 0), new Vector(25, 10,
-						25)));
+				new EllipsoidEnvelope(new Vector(0, 15, 0), new Vector(25, 10,
+						25), EllipsoidEnvelope.PopulationSchema.UMBRELLA));
 		colonizer.generateAttractors();
 	}
 
