@@ -95,6 +95,7 @@ public class ViewerProgram {
 	}
 
 	boolean triedEvolveLastLoop = false;
+	boolean triedSubdivideLastLoop = false;
 
 	public void update() {
 		if (Keyboard.isKeyDown(Keyboard.KEY_A)) {
@@ -125,6 +126,14 @@ public class ViewerProgram {
 				colonizer.updateModels();
 			}
 			triedEvolveLastLoop = false;
+		}
+		if (Keyboard.isKeyDown(Keyboard.KEY_TAB)) {
+			SpaceColonizer.ATTRACTOR_COUNT /= 2;
+			SpaceColonizer.ATTRACTOR_KILL_RADIUS_SQUARED /= 2;
+			colonizer.generateAttractors();
+			triedSubdivideLastLoop = true;
+		} else {
+			triedSubdivideLastLoop = false;
 		}
 	}
 

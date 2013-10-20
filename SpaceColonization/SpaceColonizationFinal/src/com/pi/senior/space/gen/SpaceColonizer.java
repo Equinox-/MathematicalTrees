@@ -17,8 +17,8 @@ import com.pi.senior.space.tree.Node;
 import com.pi.senior.space.tree.NodeIterator;
 
 public class SpaceColonizer {
-	private static final int ATTRACTOR_COUNT = 5000;
-	private static final float ATTRACTOR_KILL_RADIUS_SQUARED = 2f;
+	public static int ATTRACTOR_COUNT = 5000;
+	public static float ATTRACTOR_KILL_RADIUS_SQUARED = 2f;
 	private static final float ATTRACTOR_ATTRACTION_RADIUS_SQUARED = 100;
 	private static final float INODE_LENGTH = 0.5f;
 	private static final boolean USE_BIAS_VECTORS = false;
@@ -47,6 +47,29 @@ public class SpaceColonizer {
 			attractors.add(populationArea.nextRandom(rand));
 		}
 		System.out.println("Generated " + attractors.size() + " attractors in "
+				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
+		
+		killOffAttractors();
+	}
+
+	private void killOffAttractors() {
+		long startTime = System.nanoTime();
+		int startCount = attractors.size();
+		// Kill off old attractors
+		Iterator<Vector> attractionItr = attractors.iterator();
+		while (attractionItr.hasNext()) {
+			Iterator<Node> nodes = new NodeIterator(rootNode);
+			Vector kill = attractionItr.next();
+			while (nodes.hasNext()) {
+				Node next = nodes.next();
+				if (kill.distSquared(next.getPosition()) < ATTRACTOR_KILL_RADIUS_SQUARED) {
+					attractionItr.remove();
+					break;
+				}
+			}
+		}
+		System.out.println("Killed " + (startCount - attractors.size())
+				+ " attractors in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 	}
 
@@ -117,24 +140,7 @@ public class SpaceColonizer {
 		System.out.println("Added " + attractions.size() + " new nodes in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 
-		startTime = System.nanoTime();
-		int startCount = attractors.size();
-		// Kill off old attractors
-		Iterator<Vector> attractionItr = attractors.iterator();
-		while (attractionItr.hasNext()) {
-			Iterator<Node> nodes = new NodeIterator(rootNode);
-			Vector kill = attractionItr.next();
-			while (nodes.hasNext()) {
-				Node next = nodes.next();
-				if (kill.distSquared(next.getPosition()) < ATTRACTOR_KILL_RADIUS_SQUARED) {
-					attractionItr.remove();
-					break;
-				}
-			}
-		}
-		System.out.println("Killed " + (startCount - attractors.size())
-				+ " attractors in "
-				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
+		killOffAttractors();
 	}
 
 	public void updateModels() {
