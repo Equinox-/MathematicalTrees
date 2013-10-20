@@ -12,14 +12,17 @@ import java.util.Set;
 import org.lwjgl.opengl.GL11;
 
 import com.pi.senior.math.Vector;
+import com.pi.senior.space.renderer.CylinderVertexObject;
 import com.pi.senior.space.tree.Node;
 import com.pi.senior.space.tree.NodeIterator;
 
 public class SpaceColonizer {
-	private static final int ATTRACTOR_COUNT = 1000;
+	private static final int ATTRACTOR_COUNT = 5000;
 	private static final float ATTRACTOR_KILL_RADIUS_SQUARED = 2f;
 	private static final float ATTRACTOR_ATTRACTION_RADIUS_SQUARED = 100;
 	private static final float INODE_LENGTH = 0.5f;
+	private static final boolean USE_BIAS_VECTORS = false;
+
 	private static final float IDEAL_BRANCH_SLOPE = 0.5f; // 0.5 up for 1 over
 
 	private Node rootNode;
@@ -29,6 +32,8 @@ public class SpaceColonizer {
 	private List<Vector> attractors;
 
 	private int nodeCount = 1;
+
+	private ArrayList<CylinderVertexObject> vertexObjects = new ArrayList<CylinderVertexObject>();
 
 	public SpaceColonizer(Node root, Envelope area) {
 		this.rootNode = root;
@@ -45,68 +50,62 @@ public class SpaceColonizer {
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 	}
 
-	public void evolve() {
+	private Map<Node, Vector> generateAttractionVectors() {
 		long startTime = System.nanoTime();
-		// First step is to inspect every attraction vector and find the closest
-		// node.
 		Map<Node, Vector> attractions = new HashMap<Node, Vector>(nodeCount);
 		for (Vector v : attractors) {
 			Iterator<Node> ndIterator = new NodeIterator(rootNode);
-			double bestDist = Double.MAX_VALUE;
-			Node bestNd = null;
-			Vector bestDirection = null;
-			while (ndIterator.hasNext()) {
-				Node nd = ndIterator.next();
-				double dist2 = nd.getPosition().distSquared(v);
-				if (dist2 < ATTRACTOR_ATTRACTION_RADIUS_SQUARED
-						&& dist2 < bestDist) {
-					// Compare the current branch direction with the direction
-					// this branch will cause.
-					Vector testDirection = v.clone().subtract(nd.getPosition())
-							.normalize();
 
-					if (nd.getDirection() != null) {
-						double angleOfChange = Math.abs(Math.acos(Vector
-								.dotProduct(testDirection, nd.getDirection())));
-						dist2 *= (angleOfChange);
-					} else {
-						dist2 *= Math.PI / 2f;
-					}
+			Vector tropism = v.clone().subtract(rootNode.getPosition());
+			// We want to assume perfectly flat branching structures
+			tropism.y = IDEAL_BRANCH_SLOPE;
+			tropism.normalize();
 
-					// A second bias is to compare to the root of the tree. In
-					// general branches should extend away from the root of the
-					// tree on the XZ plane.
-					Vector centerOfTreeDirection = v.clone().subtract(
-							rootNode.getPosition());
-					// We want to assume perfectly flat branching structures
-					centerOfTreeDirection.y = IDEAL_BRANCH_SLOPE;
-					centerOfTreeDirection.normalize();
-					double angleOfChange = Math.abs(Math.acos(Vector
-							.dotProduct(centerOfTreeDirection, testDirection)));
-					dist2 *= (angleOfChange);
-
-					if (dist2 < bestDist) {
-						bestDirection = testDirection;
-						bestNd = nd;
-						bestDist = dist2;
-					}
-				}
-			}
-			if (bestNd != null) {
-				Vector curr = attractions.get(bestNd);
+			AttractionNode attracted = AttractionNode.computeNodeFor(
+					ndIterator, v, USE_BIAS_VECTORS, tropism,
+					ATTRACTOR_ATTRACTION_RADIUS_SQUARED);
+			if (attracted != null) {
+				Vector curr = attractions.get(attracted.getAttracted());
 				if (curr == null) {
 					curr = new Vector(0, 0, 0);
-					attractions.put(bestNd, curr);
+					attractions.put(attracted.getAttracted(), curr);
 				}
-				curr.add(bestDirection);
+				curr.add(attracted.getGrowthDirection());
+			}
+		}
+		if (attractions.size() == 0 && attractors.size() > 0) {
+			// If we don't get any attractions, get the closest one & ignore the
+			// funny bizniz
+			AttractionNode bestAttracted = null;
+			for (Vector v : attractors) {
+				Iterator<Node> ndIterator = new NodeIterator(rootNode);
+
+				AttractionNode attracted = AttractionNode.computeNodeFor(
+						ndIterator, v, false, null, Float.MAX_VALUE);
+				if (attracted != null
+						&& (bestAttracted == null || attracted
+								.compareTo(bestAttracted) > 0)) {
+					bestAttracted = attracted;
+				}
+			}
+			if (bestAttracted != null) {
+				attractions.put(bestAttracted.getAttracted(),
+						bestAttracted.getGrowthDirection());
 			}
 		}
 		System.out.println("Generated " + attractions.size()
 				+ " attraction vectors in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
+		return attractions;
+	}
 
-		startTime = System.nanoTime();
+	public void evolve() {
+		// First step is to inspect every attraction vector and find the closest
+		// node.
+		Map<Node, Vector> attractions = generateAttractionVectors();
+
 		// Add the new nodes
+		long startTime = System.nanoTime();
 		Set<Entry<Node, Vector>> dirSet = attractions.entrySet();
 		for (Entry<Node, Vector> dirSpec : dirSet) {
 			dirSpec.getValue().normalize().multiply(INODE_LENGTH);
@@ -138,6 +137,33 @@ public class SpaceColonizer {
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 	}
 
+	public void updateModels() {
+		long startTime = System.nanoTime();
+		rootNode.updateCrossSection();
+		System.out.println("Update " + nodeCount + " radi in "
+				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
+
+		startTime = System.nanoTime();
+		vertexObjects.clear();
+		vertexObjects.ensureCapacity(nodeCount - 1);
+		Iterator<Node> nodes = new NodeIterator(rootNode);
+		while (nodes.hasNext()) {
+			Node node = nodes.next();
+			if (node.getParent() != null) {
+				float initRadius = node.getParent().getRadius();
+				if (node.getParent().getCrossSection() - node.getCrossSection() > Node.ACCUM_CROSS_SECTION * 10) {
+					// Joining with a big branch...
+					initRadius = node.getRadius();
+				}
+				vertexObjects.add(new CylinderVertexObject(initRadius, node
+						.getRadius(), 10, node.getParent().getPosition(), node
+						.getPosition()));
+			}
+		}
+		System.out.println("Generated " + (nodeCount - 1) + " cylinders "
+				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
+	}
+
 	public void render() {
 		// Render attractors
 		GL11.glBegin(GL11.GL_POINTS);
@@ -161,5 +187,10 @@ public class SpaceColonizer {
 			}
 		}
 		GL11.glEnd();
+
+		// Now render the cylinders
+		for (CylinderVertexObject obj : vertexObjects) {
+			obj.render();
+		}
 	}
 }
