@@ -10,6 +10,7 @@ import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 
 import com.pi.senior.math.Vector;
+import com.pi.senior.space.gen.ConicalEnvelope;
 import com.pi.senior.space.gen.EllipsoidEnvelope;
 import com.pi.senior.space.gen.SpaceColonizer;
 import com.pi.senior.space.tree.Node;
@@ -27,8 +28,9 @@ public class ViewerProgram {
 
 	public ViewerProgram() {
 		colonizer = new SpaceColonizer(new Node(new Vector(0, 0, 0)),
-				new EllipsoidEnvelope(new Vector(0, 15, 0), new Vector(25, 10,
-						25), EllipsoidEnvelope.PopulationSchema.UMBRELLA));
+				new ConicalEnvelope(new Vector(0, 15, 0),
+						new Vector(25, 10, 25),
+						ConicalEnvelope.PopulationSchema.UMBRELLA));
 		colonizer.generateAttractors();
 	}
 
@@ -110,7 +112,7 @@ public class ViewerProgram {
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_S)) {
 			pitch--;
-			pitch = Math.max(pitch, 0);
+			pitch = Math.max(pitch, -45);
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_Q)) {
 			off -= 1;
