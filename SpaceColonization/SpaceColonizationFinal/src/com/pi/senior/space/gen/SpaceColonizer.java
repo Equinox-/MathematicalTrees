@@ -209,13 +209,27 @@ public class SpaceColonizer {
 			Node node = nodes.next();
 			if (node.getParent() != null) {
 				float initRadius = node.getParent().getRadius();
+				Vector startDirection = null;
 				if (node.getParent().getCrossSection() - node.getCrossSection() > Configuration.ACCUM_CROSS_SECTION * 10) {
 					// Joining with a big branch...
 					initRadius = node.getRadius();
+				} else if (node.getParent().getParent() != null) {
+					startDirection = node
+							.getParent()
+							.getPosition()
+							.clone()
+							.subtract(
+									node.getParent().getParent().getPosition())
+							.normalize();
+				}
+				if (startDirection == null) {
+					startDirection = node.getPosition().clone()
+							.subtract(node.getParent().getPosition())
+							.normalize();
 				}
 				vertexObjects.add(new CylinderVertexObject(initRadius, node
-						.getRadius(), 10, node.getParent().getPosition(), node
-						.getPosition()));
+						.getRadius(), 10, node.getParent().getPosition(),
+						startDirection, node.getPosition()));
 			}
 		}
 		System.out.println("Generated " + (nodeCount - 1) + " cylinders "

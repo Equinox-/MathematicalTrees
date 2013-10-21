@@ -15,12 +15,17 @@ public class CylinderVertexObject {
 	private FloatBuffer normalBuffer;
 
 	public CylinderVertexObject(float radStart, float radEnd, int slices,
-			Vector start, Vector end) {
+			Vector start, Vector startDirection, Vector end) {
 		Vector change = end.clone().subtract(start).normalize();
-		Vector r = Vector.crossProduct(change,
+		Vector rEnd = Vector.crossProduct(change,
 				new Vector(0.577350269f, -0.577350269f, 0.577350269f))
 				.normalize();
-		Vector s = Vector.crossProduct(change, r).normalize();
+		Vector sEnd = Vector.crossProduct(change, rEnd).normalize();
+		
+		Vector rStart = Vector.crossProduct(startDirection,
+				new Vector(0.577350269f, -0.577350269f, 0.577350269f))
+				.normalize();
+		Vector sStart = Vector.crossProduct(startDirection, rStart).normalize();
 
 		vertexBuffer = BufferUtils.createFloatBuffer(slices * 2 * 3);
 		normalBuffer = BufferUtils.createFloatBuffer(slices * 2 * 3);
@@ -33,23 +38,27 @@ public class CylinderVertexObject {
 			float cos = (float) Math.cos(theta);
 			float sin = (float) Math.sin(theta);
 
-			float oX = (cos * r.x) + (sin * s.x);
-			float oY = (cos * r.y) + (sin * s.y);
-			float oZ = (cos * r.z) + (sin * s.z);
+			float oSX = (cos * rStart.x) + (sin * sStart.x);
+			float oSY = (cos * rStart.y) + (sin * sStart.y);
+			float oSZ = (cos * rStart.z) + (sin * sStart.z);
+			
+			float oEX = (cos * rEnd.x) + (sin * sEnd.x);
+			float oEY = (cos * rEnd.y) + (sin * sEnd.y);
+			float oEZ = (cos * rEnd.z) + (sin * sEnd.z);
 
 			colorBuffer.put(new float[] { 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f });
 
-			vertexBuffer.put(start.x + (oX * radStart))
-					.put(start.y + (oY * radStart))
-					.put(start.z + (oZ * radStart));
-			normalBuffer.put(oX).put(oY).put(oZ);
+			vertexBuffer.put(start.x + (oSX * radStart))
+					.put(start.y + (oSY * radStart))
+					.put(start.z + (oSZ * radStart));
+			normalBuffer.put(oSX).put(oSY).put(oSZ);
 
 			indexBuffer.put(index);
 			index++;
 
-			vertexBuffer.put(end.x + (oX * radEnd)).put(end.y + (oY * radEnd))
-					.put(end.z + (oZ * radEnd));
-			normalBuffer.put(oX).put(oY).put(oZ);
+			vertexBuffer.put(end.x + (oEX * radEnd)).put(end.y + (oEY * radEnd))
+					.put(end.z + (oEZ * radEnd));
+			normalBuffer.put(oEX).put(oEY).put(oEZ);
 
 			indexBuffer.put(index);
 			index++;
