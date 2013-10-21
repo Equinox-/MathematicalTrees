@@ -27,7 +27,7 @@ public class ViewerProgram {
 
 	public ViewerProgram() {
 		colonizer = new SpaceColonizer(new Node(new Vector(0, 0, 0)),
-				Configuration.ENVELOPE);
+				Configuration.createEnvelope());
 		colonizer.generateAttractors();
 	}
 

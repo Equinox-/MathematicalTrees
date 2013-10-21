@@ -165,6 +165,7 @@ public class SpaceColonizer {
 	}
 
 	public void render() {
+		GL11.glDisable(GL11.GL_LIGHTING);
 		// Render attractors
 		GL11.glBegin(GL11.GL_POINTS);
 		GL11.glColor3f(1f, 0f, 0f);
@@ -188,6 +189,7 @@ public class SpaceColonizer {
 		}
 		GL11.glEnd();
 
+		GL11.glEnable(GL11.GL_LIGHTING);
 		// Now render the cylinders
 		for (CylinderVertexObject obj : vertexObjects) {
 			obj.render();
