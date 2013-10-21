@@ -10,8 +10,7 @@ import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 
 import com.pi.senior.math.Vector;
-import com.pi.senior.space.gen.ConicalEnvelope;
-import com.pi.senior.space.gen.EllipsoidEnvelope;
+import com.pi.senior.space.Configuration;
 import com.pi.senior.space.gen.SpaceColonizer;
 import com.pi.senior.space.tree.Node;
 
@@ -28,9 +27,7 @@ public class ViewerProgram {
 
 	public ViewerProgram() {
 		colonizer = new SpaceColonizer(new Node(new Vector(0, 0, 0)),
-				new ConicalEnvelope(new Vector(0, 15, 0),
-						new Vector(25, 10, 25),
-						ConicalEnvelope.PopulationSchema.UMBRELLA));
+				Configuration.ENVELOPE);
 		colonizer.generateAttractors();
 	}
 
@@ -130,8 +127,8 @@ public class ViewerProgram {
 			triedEvolveLastLoop = false;
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_TAB)) {
-			SpaceColonizer.ATTRACTOR_COUNT /= 2;
-			SpaceColonizer.ATTRACTOR_KILL_RADIUS_SQUARED /= 2;
+			Configuration.ATTRACTOR_COUNT *= Configuration.ATTRACTOR_COUNT_DEGREDATION;
+			Configuration.ATTRACTOR_KILL_RADIUS_SQUARED *= Configuration.ATTRACTOR_KILLER_DEGREDATION;
 			colonizer.generateAttractors();
 			triedSubdivideLastLoop = true;
 		} else {

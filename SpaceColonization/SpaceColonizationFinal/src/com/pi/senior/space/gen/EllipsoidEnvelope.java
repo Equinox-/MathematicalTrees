@@ -16,6 +16,12 @@ public class EllipsoidEnvelope implements Envelope {
 	private float randomShellVariance = 0.25f;
 	private float randomDistributionVariance = 0.5f;
 
+	public EllipsoidEnvelope setRandomParameters(float shellVariance, float distVariance) {
+		this.randomShellVariance = shellVariance;
+		this.randomDistributionVariance = distVariance;
+		return this;
+	}
+
 	public EllipsoidEnvelope(Vector center, Vector size,
 			PopulationSchema populationSchema) {
 		this.size = size;

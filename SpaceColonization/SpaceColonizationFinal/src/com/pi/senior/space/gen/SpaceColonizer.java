@@ -12,19 +12,12 @@ import java.util.Set;
 import org.lwjgl.opengl.GL11;
 
 import com.pi.senior.math.Vector;
+import com.pi.senior.space.Configuration;
 import com.pi.senior.space.renderer.CylinderVertexObject;
 import com.pi.senior.space.tree.Node;
 import com.pi.senior.space.tree.NodeIterator;
 
 public class SpaceColonizer {
-	public static int ATTRACTOR_COUNT = 5000;
-	public static float ATTRACTOR_KILL_RADIUS_SQUARED = 2f;
-	private static final float ATTRACTOR_ATTRACTION_RADIUS_SQUARED = 100;
-	private static final float INODE_LENGTH = 0.5f;
-	private static final boolean USE_BIAS_VECTORS = false;
-
-	private static final float IDEAL_BRANCH_SLOPE = 0.5f; // 0.5 up for 1 over
-
 	private Node rootNode;
 	private Envelope populationArea;
 	private Random rand = new Random();
@@ -42,13 +35,13 @@ public class SpaceColonizer {
 
 	public void generateAttractors() {
 		long startTime = System.nanoTime();
-		attractors = new ArrayList<Vector>(ATTRACTOR_COUNT);
-		for (int i = 0; i < ATTRACTOR_COUNT; i++) {
+		attractors = new ArrayList<Vector>(Configuration.ATTRACTOR_COUNT);
+		for (int i = 0; i < Configuration.ATTRACTOR_COUNT; i++) {
 			attractors.add(populationArea.nextRandom(rand));
 		}
 		System.out.println("Generated " + attractors.size() + " attractors in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
-		
+
 		killOffAttractors();
 	}
 
@@ -62,7 +55,7 @@ public class SpaceColonizer {
 			Vector kill = attractionItr.next();
 			while (nodes.hasNext()) {
 				Node next = nodes.next();
-				if (kill.distSquared(next.getPosition()) < ATTRACTOR_KILL_RADIUS_SQUARED) {
+				if (kill.distSquared(next.getPosition()) < Configuration.ATTRACTOR_KILL_RADIUS_SQUARED) {
 					attractionItr.remove();
 					break;
 				}
@@ -81,12 +74,12 @@ public class SpaceColonizer {
 
 			Vector tropism = v.clone().subtract(rootNode.getPosition());
 			// We want to assume perfectly flat branching structures
-			tropism.y = IDEAL_BRANCH_SLOPE;
+			tropism.y = Configuration.IDEAL_BRANCH_SLOPE;
 			tropism.normalize();
 
 			AttractionNode attracted = AttractionNode.computeNodeFor(
-					ndIterator, v, USE_BIAS_VECTORS, tropism,
-					ATTRACTOR_ATTRACTION_RADIUS_SQUARED);
+					ndIterator, v, Configuration.USE_BIAS_VECTORS, tropism,
+					Configuration.ATTRACTOR_ATTRACTION_RADIUS_SQUARED);
 			if (attracted != null) {
 				Vector curr = attractions.get(attracted.getAttracted());
 				if (curr == null) {
@@ -131,7 +124,7 @@ public class SpaceColonizer {
 		long startTime = System.nanoTime();
 		Set<Entry<Node, Vector>> dirSet = attractions.entrySet();
 		for (Entry<Node, Vector> dirSpec : dirSet) {
-			dirSpec.getValue().normalize().multiply(INODE_LENGTH);
+			dirSpec.getValue().normalize().multiply(Configuration.INODE_LENGTH);
 			dirSpec.getKey().addChild(
 					new Node(dirSpec.getKey().getPosition().clone()
 							.add(dirSpec.getValue())));
@@ -157,7 +150,7 @@ public class SpaceColonizer {
 			Node node = nodes.next();
 			if (node.getParent() != null) {
 				float initRadius = node.getParent().getRadius();
-				if (node.getParent().getCrossSection() - node.getCrossSection() > Node.ACCUM_CROSS_SECTION * 10) {
+				if (node.getParent().getCrossSection() - node.getCrossSection() > Configuration.ACCUM_CROSS_SECTION * 10) {
 					// Joining with a big branch...
 					initRadius = node.getRadius();
 				}

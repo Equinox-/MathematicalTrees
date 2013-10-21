@@ -12,6 +12,7 @@ public class ConicalEnvelope implements Envelope {
 	private Vector bottom;
 	private Vector size;
 	private PopulationSchema populationSchema;
+	
 	private float randomShellVariance = 0.25f;
 	private float randomDistributionVariance = 0.5f;
 
@@ -20,6 +21,12 @@ public class ConicalEnvelope implements Envelope {
 		this.size = size;
 		this.bottom = bottom;
 		this.populationSchema = populationSchema;
+	}
+	
+	public ConicalEnvelope setRandomParameters(float shellVariance, float distVariance) {
+		this.randomShellVariance = shellVariance;
+		this.randomDistributionVariance = distVariance;
+		return this;
 	}
 
 	@Override
