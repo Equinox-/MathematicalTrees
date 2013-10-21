@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL11;
 import com.pi.senior.math.Vector;
 import com.pi.senior.space.Configuration;
 import com.pi.senior.space.renderer.CylinderVertexObject;
+import com.pi.senior.space.tree.LeafIterator;
 import com.pi.senior.space.tree.Node;
 import com.pi.senior.space.tree.NodeIterator;
 
@@ -54,10 +55,10 @@ public class SpaceColonizer {
 		System.out.println("Generated " + attractors.size() + " attractors in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 
-		killOffAttractors();
+		killOffAttractors(false);
 	}
 
-	private void killOffAttractors() {
+	private void killOffAttractors(final boolean justLeaves) {
 		long startTime = System.nanoTime();
 		int startCount = attractors.size();
 
@@ -68,7 +69,8 @@ public class SpaceColonizer {
 			final Vector kill = attractionItr.next();
 			Callable<Vector> runner = new Callable<Vector>() {
 				public Vector call() {
-					Iterator<Node> nodes = new NodeIterator(rootNode);
+					Iterator<Node> nodes = (justLeaves ? new LeafIterator(
+							rootNode) : new NodeIterator(rootNode));
 					while (nodes.hasNext()) {
 						Node next = nodes.next();
 						if (kill.distSquared(next.getPosition()) < Configuration.ATTRACTOR_KILL_RADIUS_SQUARED) {
@@ -182,7 +184,7 @@ public class SpaceColonizer {
 		System.out.println("Added " + attractions.size() + " new nodes in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 
-		killOffAttractors();
+		killOffAttractors(true);
 	}
 
 	public void updateModels() {
