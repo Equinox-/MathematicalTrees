@@ -147,6 +147,7 @@ public class ViewerProgram {
 	}
 
 	public void dispose() {
+		colonizer.shutdown();
 		Display.destroy();
 	}
 

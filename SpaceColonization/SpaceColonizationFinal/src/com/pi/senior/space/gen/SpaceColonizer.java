@@ -8,6 +8,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.lwjgl.opengl.GL11;
 
@@ -28,9 +34,15 @@ public class SpaceColonizer {
 
 	private ArrayList<CylinderVertexObject> vertexObjects = new ArrayList<CylinderVertexObject>();
 
+	private ThreadPoolExecutor threadPool;
+
 	public SpaceColonizer(Node root, Envelope area) {
 		this.rootNode = root;
 		this.populationArea = area;
+		this.threadPool = new ThreadPoolExecutor(Runtime.getRuntime()
+				.availableProcessors() * 2, Runtime.getRuntime()
+				.availableProcessors() * 4, 1000, TimeUnit.MILLISECONDS,
+				new LinkedBlockingQueue<Runnable>());
 	}
 
 	public void generateAttractors() {
@@ -48,17 +60,33 @@ public class SpaceColonizer {
 	private void killOffAttractors() {
 		long startTime = System.nanoTime();
 		int startCount = attractors.size();
+
 		// Kill off old attractors
 		Iterator<Vector> attractionItr = attractors.iterator();
+		Stack<Future<Vector>> futures = new Stack<Future<Vector>>();
 		while (attractionItr.hasNext()) {
-			Iterator<Node> nodes = new NodeIterator(rootNode);
-			Vector kill = attractionItr.next();
-			while (nodes.hasNext()) {
-				Node next = nodes.next();
-				if (kill.distSquared(next.getPosition()) < Configuration.ATTRACTOR_KILL_RADIUS_SQUARED) {
-					attractionItr.remove();
-					break;
+			final Vector kill = attractionItr.next();
+			Callable<Vector> runner = new Callable<Vector>() {
+				public Vector call() {
+					Iterator<Node> nodes = new NodeIterator(rootNode);
+					while (nodes.hasNext()) {
+						Node next = nodes.next();
+						if (kill.distSquared(next.getPosition()) < Configuration.ATTRACTOR_KILL_RADIUS_SQUARED) {
+							return kill;
+						}
+					}
+					return null;
 				}
+			};
+			futures.add(threadPool.submit(runner));
+		}
+		while (!futures.empty()) {
+			try {
+				Vector v = futures.pop().get(1000, TimeUnit.SECONDS);
+				if (v != null) {
+					attractors.remove(v);
+				}
+			} catch (Exception e) {
 			}
 		}
 		System.out.println("Killed " + (startCount - attractors.size())
@@ -68,25 +96,45 @@ public class SpaceColonizer {
 
 	private Map<Node, Vector> generateAttractionVectors() {
 		long startTime = System.nanoTime();
-		Map<Node, Vector> attractions = new HashMap<Node, Vector>(nodeCount);
-		for (Vector v : attractors) {
-			Iterator<Node> ndIterator = new NodeIterator(rootNode);
+		final Map<Node, Vector> attractions = new HashMap<Node, Vector>(
+				nodeCount);
+		Stack<Future<?>> futures = new Stack<Future<?>>();
+		for (final Vector v : attractors) {
+			Runnable runner = new Runnable() {
+				public void run() {
+					Iterator<Node> ndIterator = new NodeIterator(rootNode);
+					Vector tropism = v.clone().subtract(rootNode.getPosition());
+					// We want to assume perfectly flat branching structures
+					tropism.y = Configuration.IDEAL_BRANCH_SLOPE;
+					tropism.normalize();
 
-			Vector tropism = v.clone().subtract(rootNode.getPosition());
-			// We want to assume perfectly flat branching structures
-			tropism.y = Configuration.IDEAL_BRANCH_SLOPE;
-			tropism.normalize();
-
-			AttractionNode attracted = AttractionNode.computeNodeFor(
-					ndIterator, v, Configuration.USE_BIAS_VECTORS, tropism,
-					Configuration.ATTRACTOR_ATTRACTION_RADIUS_SQUARED);
-			if (attracted != null) {
-				Vector curr = attractions.get(attracted.getAttracted());
-				if (curr == null) {
-					curr = new Vector(0, 0, 0);
-					attractions.put(attracted.getAttracted(), curr);
+					AttractionNode attracted = AttractionNode.computeNodeFor(
+							ndIterator, v, Configuration.USE_BIAS_VECTORS,
+							tropism,
+							Configuration.ATTRACTOR_ATTRACTION_RADIUS_SQUARED);
+					synchronized (attractions) {
+						if (attracted != null) {
+							Vector curr = attractions.get(attracted
+									.getAttracted());
+							if (curr == null) {
+								curr = new Vector(0, 0, 0);
+								attractions.put(attracted.getAttracted(), curr);
+							}
+							curr.add(attracted.getGrowthDirection());
+						}
+					}
 				}
-				curr.add(attracted.getGrowthDirection());
+			};
+			if (threadPool != null) {
+				futures.add(threadPool.submit(runner));
+			} else {
+				runner.run();
+			}
+		}
+		while (!futures.empty()) {
+			try {
+				futures.pop().get(1000, TimeUnit.SECONDS);
+			} catch (Exception e) {
 			}
 		}
 		if (attractions.size() == 0 && attractors.size() > 0) {
@@ -193,6 +241,16 @@ public class SpaceColonizer {
 		// Now render the cylinders
 		for (CylinderVertexObject obj : vertexObjects) {
 			obj.render();
+		}
+	}
+
+	public void shutdown() {
+		threadPool.shutdown();
+		System.out.println(threadPool.getActiveCount());
+		try {
+			threadPool.awaitTermination(10000, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 }
