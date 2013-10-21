@@ -1,11 +1,20 @@
 package com.pi.senior.space.tree;
 
 import java.util.Iterator;
+import java.util.concurrent.Callable;
 
 public class NodeIterator implements Iterator<Node> {
 	private Node root;
 	private Node current;
 	private boolean killedFirst = false;
+
+	public static Callable<NodeIterator> createFactory(final Node root) {
+		return new Callable<NodeIterator>() {
+			public NodeIterator call() {
+				return new NodeIterator(root);
+			}
+		};
+	}
 
 	public NodeIterator(Node root) {
 		this.root = root;

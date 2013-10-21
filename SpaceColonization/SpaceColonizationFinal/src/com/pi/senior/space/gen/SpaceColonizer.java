@@ -20,7 +20,6 @@ import org.lwjgl.opengl.GL11;
 import com.pi.senior.math.Vector;
 import com.pi.senior.space.Configuration;
 import com.pi.senior.space.renderer.CylinderVertexObject;
-import com.pi.senior.space.tree.LeafIterator;
 import com.pi.senior.space.tree.Node;
 import com.pi.senior.space.tree.NodeIterator;
 
@@ -55,10 +54,11 @@ public class SpaceColonizer {
 		System.out.println("Generated " + attractors.size() + " attractors in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 
-		killOffAttractors(false);
+		killOffAttractors(NodeIterator.createFactory(rootNode));
 	}
 
-	private void killOffAttractors(final boolean justLeaves) {
+	private void killOffAttractors(
+			final Callable<? extends Iterator<Node>> iteratorFactory) {
 		long startTime = System.nanoTime();
 		int startCount = attractors.size();
 
@@ -69,13 +69,15 @@ public class SpaceColonizer {
 			final Vector kill = attractionItr.next();
 			Callable<Vector> runner = new Callable<Vector>() {
 				public Vector call() {
-					Iterator<Node> nodes = (justLeaves ? new LeafIterator(
-							rootNode) : new NodeIterator(rootNode));
-					while (nodes.hasNext()) {
-						Node next = nodes.next();
-						if (kill.distSquared(next.getPosition()) < Configuration.ATTRACTOR_KILL_RADIUS_SQUARED) {
-							return kill;
+					try {
+						Iterator<Node> nodes = iteratorFactory.call();
+						while (nodes.hasNext()) {
+							Node next = nodes.next();
+							if (kill.distSquared(next.getPosition()) < Configuration.ATTRACTOR_KILL_RADIUS_SQUARED) {
+								return kill;
+							}
 						}
+					} catch (Exception e) {
 					}
 					return null;
 				}
@@ -173,18 +175,24 @@ public class SpaceColonizer {
 		// Add the new nodes
 		long startTime = System.nanoTime();
 		Set<Entry<Node, Vector>> dirSet = attractions.entrySet();
+		final List<Node> newNodes = new ArrayList<Node>(dirSet.size());
 		for (Entry<Node, Vector> dirSpec : dirSet) {
 			dirSpec.getValue().normalize().multiply(Configuration.INODE_LENGTH);
-			if (dirSpec.getKey().addChild(
-					new Node(dirSpec.getKey().getPosition().clone()
-							.add(dirSpec.getValue())))) {
+			Node nd = new Node(dirSpec.getKey().getPosition().clone()
+					.add(dirSpec.getValue()));
+			if (dirSpec.getKey().addChild(nd)) {
+				newNodes.add(nd);
 				nodeCount++;
 			}
 		}
 		System.out.println("Added " + attractions.size() + " new nodes in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 
-		killOffAttractors(true);
+		killOffAttractors(new Callable<Iterator<Node>>() {
+			public Iterator<Node> call() {
+				return newNodes.iterator();
+			}
+		});
 	}
 
 	public void updateModels() {
