@@ -57,9 +57,9 @@ public class AnaglyphConfigurator {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 800, 600);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().setLayout(new GridLayout(25, 2, 0, 0));
+		frame.setBounds(100, 100, 250, 100);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.getContentPane().setLayout(new GridLayout(5, 1, 0, 0));
 
 		// Dynamically generate contents
 		try {
@@ -96,7 +96,7 @@ public class AnaglyphConfigurator {
 			e.printStackTrace();
 		}
 
-		JButton submit = new JButton("Launch");
+		JButton submit = new JButton("Set");
 		submit.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				store();

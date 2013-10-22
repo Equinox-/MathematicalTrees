@@ -99,6 +99,7 @@ public class ViewerProgram {
 				GL11.GL_LIGHT_MODEL_AMBIENT,
 				(FloatBuffer) BufferUtils.createFloatBuffer(4)
 						.put(new float[] { .25f, .3f, .25f, 1f }).flip());
+		GL11.glLightModeli(GL11.GL_LIGHT_MODEL_TWO_SIDE, GL11.GL_TRUE);
 	}
 
 	private void setLights() {
