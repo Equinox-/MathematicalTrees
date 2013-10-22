@@ -236,7 +236,7 @@ public class SpaceColonizer {
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 	}
 
-	public void render() {
+	public void renderAttractors() {
 		GL11.glDisable(GL11.GL_LIGHTING);
 		// Render attractors
 		GL11.glBegin(GL11.GL_POINTS);
@@ -245,7 +245,11 @@ public class SpaceColonizer {
 			GL11.glVertex3f(v.x, v.y, v.z);
 		}
 		GL11.glEnd();
+		GL11.glEnable(GL11.GL_LIGHTING);
+	}
 
+	public void renderLineConnectors() {
+		GL11.glDisable(GL11.GL_LIGHTING);
 		// Now render the connections
 		GL11.glBegin(GL11.GL_LINES);
 		GL11.glColor3f(1f, 1f, 1f);
@@ -260,7 +264,10 @@ public class SpaceColonizer {
 			}
 		}
 		GL11.glEnd();
+		GL11.glEnable(GL11.GL_LIGHTING);
+	}
 
+	public void renderCylinderConnectors() {
 		GL11.glEnable(GL11.GL_LIGHTING);
 		// Now render the cylinders
 		for (CylinderVertexObject obj : vertexObjects) {

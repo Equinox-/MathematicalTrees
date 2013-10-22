@@ -57,7 +57,12 @@ public class ViewerProgram {
 		setLights();
 
 		GL11.glTranslatef(0, -10, 0);
-		colonizer.render();
+		colonizer.renderAttractors();
+		if (triedEvolveLastLoop) {
+			colonizer.renderLineConnectors();
+		} else {
+			colonizer.renderCylinderConnectors();
+		}
 	}
 
 	private void initGL() {
@@ -67,6 +72,14 @@ public class ViewerProgram {
 		GL11.glEnable(GL11.GL_LIGHT1);
 		GL11.glEnable(GL11.GL_COLOR_MATERIAL);
 
+		GL11.glEnable(GL11.GL_LINE_SMOOTH);
+		GL11.glEnable(GL11.GL_POLYGON_SMOOTH);
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+		GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
+		GL11.glHint(GL11.GL_POLYGON_SMOOTH_HINT, GL11.GL_NICEST);
+		
 		GL11.glLightModel(
 				GL11.GL_LIGHT_MODEL_AMBIENT,
 				(FloatBuffer) BufferUtils.createFloatBuffer(4)
