@@ -48,7 +48,7 @@ public class SpaceColonizer {
 	public void generateAttractors() {
 		long startTime = System.nanoTime();
 		attractors = new ArrayList<Vector>(Configuration.ATTRACTOR_COUNT);
-		for (int i = 0; i < Configuration.ATTRACTOR_COUNT; i++) {
+		for (int i = 0; i < Configuration.ATTRACTOR_COUNT; ++i) {
 			attractors.add(populationArea.nextRandom(rand));
 		}
 		System.out.println("Generated " + attractors.size() + " attractors in "
@@ -175,6 +175,7 @@ public class SpaceColonizer {
 		// Add the new nodes
 		long startTime = System.nanoTime();
 		Set<Entry<Node, Vector>> dirSet = attractions.entrySet();
+		int nodesAdded = 0;
 		final List<Node> newNodes = new ArrayList<Node>(dirSet.size());
 		for (Entry<Node, Vector> dirSpec : dirSet) {
 			dirSpec.getValue().normalize().multiply(Configuration.INODE_LENGTH);
@@ -182,10 +183,11 @@ public class SpaceColonizer {
 					.add(dirSpec.getValue()));
 			if (dirSpec.getKey().addChild(nd)) {
 				newNodes.add(nd);
-				nodeCount++;
+				++nodeCount;
+				++nodesAdded;
 			}
 		}
-		System.out.println("Added " + attractions.size() + " new nodes in "
+		System.out.println("Added " + nodesAdded + " new nodes in "
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 
 		killOffAttractors(new Callable<Iterator<Node>>() {
