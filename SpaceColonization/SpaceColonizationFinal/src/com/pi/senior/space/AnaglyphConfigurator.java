@@ -1,6 +1,5 @@
 package com.pi.senior.space;
 
-import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -23,26 +22,14 @@ public class AnaglyphConfigurator {
 	private Map<JComponent, Field> fieldMap = new HashMap<JComponent, Field>();
 
 	public static void show() {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					window = new AnaglyphConfigurator();
-					window.frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		window = new AnaglyphConfigurator();
+		window.frame.setVisible(true);
 	}
 
 	public static void kill() {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				if (window != null) {
-					window.frame.dispose();
-				}
-			}
-		});
+		if (window != null && window.frame != null) {
+			window.frame.dispose();
+		}
 	}
 
 	/**
@@ -57,9 +44,10 @@ public class AnaglyphConfigurator {
 	 */
 	private void initialize() {
 		frame = new JFrame();
+		frame.setTitle("Anaglyph Config");
 		frame.setBounds(100, 100, 250, 100);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.getContentPane().setLayout(new GridLayout(5, 1, 0, 0));
+		frame.getContentPane().setLayout(new GridLayout(6, 1, 0, 0));
 
 		// Dynamically generate contents
 		try {
@@ -103,6 +91,7 @@ public class AnaglyphConfigurator {
 			}
 		});
 		frame.getContentPane().add(submit);
+		frame.pack();
 	}
 
 	public void store() {

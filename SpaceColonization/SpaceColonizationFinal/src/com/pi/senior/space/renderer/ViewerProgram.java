@@ -34,6 +34,7 @@ public class ViewerProgram {
 	}
 
 	public void init() throws LWJGLException {
+		Display.setTitle("Trees!");
 		Display.setDisplayMode(new DisplayMode(width, height));
 		Display.setLocation((Display.getDesktopDisplayMode().getWidth() / 2)
 				- (width / 2),
@@ -182,9 +183,16 @@ public class ViewerProgram {
 	}
 
 	public static void main(String[] args) throws LWJGLException {
-		ViewerProgram pgm = new ViewerProgram();
-		pgm.init();
-		pgm.run();
-		pgm.dispose();
+		final ViewerProgram pgm = new ViewerProgram();
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					pgm.init();
+					pgm.run();
+					pgm.dispose();
+				} catch (LWJGLException e) {
+				}
+			}
+		}).start();
 	}
 }
