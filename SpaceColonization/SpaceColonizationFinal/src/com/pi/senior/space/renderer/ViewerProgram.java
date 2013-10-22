@@ -10,13 +10,12 @@ import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 
 import com.pi.senior.math.Vector;
+import com.pi.senior.space.AnaglyphConfigurator;
 import com.pi.senior.space.Configuration;
 import com.pi.senior.space.gen.SpaceColonizer;
 import com.pi.senior.space.tree.Node;
 
 public class ViewerProgram {
-	private double horizontalTan = Math.tan(Math.toRadians(25));
-
 	private static final int TARGET_FPS = 60;
 	private int width = 800, height = 600;
 	private SpaceColonizer colonizer;
@@ -24,11 +23,14 @@ public class ViewerProgram {
 	private float pitch = 0;
 	private float yaw = 0;
 	private float off = 10;
+	private StereoCamera cam;
 
 	public ViewerProgram() {
 		colonizer = new SpaceColonizer(new Node(new Vector(0, 0, 0)),
 				Configuration.createEnvelope());
 		colonizer.generateAttractors();
+		AnaglyphConfigurator.show();
+		cam = new StereoCamera(45, 1, 20000);
 	}
 
 	public void init() throws LWJGLException {
@@ -37,19 +39,32 @@ public class ViewerProgram {
 				- (width / 2),
 				(Display.getDesktopDisplayMode().getHeight() / 2)
 						- (height / 2));
+		Display.setResizable(true);
 		Display.create();
 	}
 
 	private void render() {
+		float aspect = (float) Display.getWidth() / (float) Display.getHeight();
+		GL11.glViewport(0, 0, Display.getWidth(), Display.getHeight());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glLoadIdentity();
-		double aspect = ((double) height) / ((double) width);
-		GL11.glFrustum(-horizontalTan, horizontalTan, aspect * -horizontalTan,
-				aspect * horizontalTan, 1, 100000);
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glLoadIdentity();
 
+		if (cam.isStereo()) {
+			cam.applyLeftFrustum(aspect);
+			GL11.glColorMask(true, false, false, false);
+			renderInternal();
+
+			GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
+			cam.applyRightFrustum(aspect);
+			GL11.glColorMask(false, false, true, false);
+		} else {
+			cam.applyRightFrustum(aspect);
+		}
+		renderInternal();
+
+		GL11.glColorMask(true, true, true, true);
+	}
+
+	private void renderInternal() {
 		GL11.glTranslatef(0, 0, -off);
 		GL11.glRotatef(pitch, 1, 0, 0);
 		GL11.glRotatef(yaw, 0, 1, 0);
@@ -79,7 +94,7 @@ public class ViewerProgram {
 
 		GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
 		GL11.glHint(GL11.GL_POLYGON_SMOOTH_HINT, GL11.GL_NICEST);
-		
+
 		GL11.glLightModel(
 				GL11.GL_LIGHT_MODEL_AMBIENT,
 				(FloatBuffer) BufferUtils.createFloatBuffer(4)
@@ -162,6 +177,7 @@ public class ViewerProgram {
 	public void dispose() {
 		colonizer.shutdown();
 		Display.destroy();
+		AnaglyphConfigurator.kill();
 	}
 
 	public static void main(String[] args) throws LWJGLException {

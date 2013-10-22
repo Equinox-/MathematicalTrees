@@ -54,9 +54,9 @@ public class Configuration {
 	public static float TIP_CROSS_SECTION = 1f;
 	public static float ACCUM_CROSS_SECTION = 0.1f;
 	public static float NODE_CHILD_TOLERANCE = 0.1f;
-	
-	public static float TROPISM_WEIGHT = 10f;
-	public static float DIVERGENCE_WEIGHT = 10f;
+
+	public static float TROPISM_WEIGHT = 0f;
+	public static float DIVERGENCE_WEIGHT = 0f;
 
 	public static float OUTSIDE_ENVELOPE_ATTRACTOR_TOLERANCE = 100;
 }
