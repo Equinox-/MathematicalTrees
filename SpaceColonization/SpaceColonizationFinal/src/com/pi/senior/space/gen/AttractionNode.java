@@ -41,7 +41,7 @@ public class AttractionNode implements Comparable<AttractionNode> {
 		double dist2 = distRaw;
 		Vector testDirection = attractor.clone().subtract(nd.getPosition())
 				.normalize();
-		if (divergenceWeight > 0) {
+		if (divergenceWeight > 0 && idealDirection != null) {
 			// Compare the current branch direction with the direction
 			// this branch will cause.
 			if (nd.getDirection() != null) {
