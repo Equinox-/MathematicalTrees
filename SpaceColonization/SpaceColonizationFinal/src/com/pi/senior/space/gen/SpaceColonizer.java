@@ -116,9 +116,10 @@ public class SpaceColonizer {
 							.computeBestNodeFor(
 									ndIterator,
 									v,
-									Configuration.USE_BIAS_VECTORS,
 									tropism,
-									Configuration.ATTRACTOR_ATTRACTION_RADIUS_SQUARED);
+									Configuration.ATTRACTOR_ATTRACTION_RADIUS_SQUARED,
+									Configuration.DIVERGENCE_WEIGHT,
+									Configuration.TROPISM_WEIGHT);
 					synchronized (attractions) {
 						if (attracted != null) {
 							Vector curr = attractions.get(attracted
@@ -127,7 +128,9 @@ public class SpaceColonizer {
 								curr = new Vector(0, 0, 0);
 								attractions.put(attracted.getAttracted(), curr);
 							}
-							curr.add(attracted.getGrowthDirection());
+							curr.add(attracted.getGrowthDirection().multiply(
+									1f / (float) Math.sqrt(attracted
+											.getWeightedDistance())));
 						}
 					}
 				}
@@ -152,7 +155,7 @@ public class SpaceColonizer {
 				Iterator<Node> ndIterator = new NodeIterator(rootNode);
 
 				AttractionNode attracted = AttractionNode.computeBestNodeFor(
-						ndIterator, v, false, null, Float.MAX_VALUE);
+						ndIterator, v, null, Float.MAX_VALUE, 0, 0);
 				if (attracted != null
 						&& (bestAttracted == null || attracted
 								.compareTo(bestAttracted) > 0)) {
@@ -166,7 +169,7 @@ public class SpaceColonizer {
 				for (Vector v : attractors) {
 					AttractionNode attractionInformation = AttractionNode
 							.computeAttractionOf(bestAttracted.getAttracted(),
-									v, false, null);
+									v, null, 0, 0);
 					if (Math.abs(attractionInformation.getWeightedDistance()
 							- bestAttracted.getWeightedDistance()) < Configuration.OUTSIDE_ENVELOPE_ATTRACTOR_TOLERANCE) {
 						accum.add(attractionInformation

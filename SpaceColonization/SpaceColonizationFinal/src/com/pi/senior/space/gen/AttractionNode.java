@@ -36,39 +36,39 @@ public class AttractionNode implements Comparable<AttractionNode> {
 	}
 
 	public static AttractionNode computeAttractionOf(Node nd, Vector attractor,
-			boolean useBiasVectors, Vector idealDirection) {
+			Vector idealDirection, float divergenceWeight, float tropismWeight) {
 		double distRaw = nd.getPosition().distSquared(attractor);
 		double dist2 = distRaw;
 		Vector testDirection = attractor.clone().subtract(nd.getPosition())
 				.normalize();
-		if (useBiasVectors) {
+		if (divergenceWeight > 0) {
 			// Compare the current branch direction with the direction
 			// this branch will cause.
 			if (nd.getDirection() != null) {
 				double angleOfChange = Math.abs(Math.acos(Vector.dotProduct(
 						testDirection, nd.getDirection())));
-				dist2 *= (angleOfChange);
-			} else {
-				dist2 *= Math.PI / 2f;
+				dist2 += angleOfChange * divergenceWeight;
 			}
-
+		}
+		if (tropismWeight > 0) {
 			// A second bias is to compare to the root of the tree. In
 			// general branches should extend away from the root of the
 			// tree on the XZ plane. AKA tropism
 			double angleOfChange = Math.abs(Math.acos(Vector.dotProduct(
 					idealDirection, testDirection)));
-			dist2 *= (angleOfChange);
+			dist2 += angleOfChange * tropismWeight;
 		}
 		return new AttractionNode(nd, testDirection, dist2, distRaw);
 	}
 
 	public static AttractionNode computeBestNodeFor(Iterator<Node> ndIterator,
-			Vector attractor, boolean useBiasVectors, Vector idealDirection,
-			float maxAttractionDistance) {
+			Vector attractor, Vector idealDirection,
+			float maxAttractionDistance, float divergenceWeight,
+			float tropismWeight) {
 		AttractionNode bestNode = null;
 		while (ndIterator.hasNext()) {
 			AttractionNode testNode = computeAttractionOf(ndIterator.next(),
-					attractor, useBiasVectors, idealDirection);
+					attractor, idealDirection, divergenceWeight, tropismWeight);
 			if (testNode.getRawDistance() < maxAttractionDistance
 					&& (bestNode == null || bestNode.compareTo(testNode) < 0)) {
 				bestNode = testNode;

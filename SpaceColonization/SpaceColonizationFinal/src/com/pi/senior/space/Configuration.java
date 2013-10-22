@@ -48,7 +48,6 @@ public class Configuration {
 	public static float ATTRACTOR_KILL_RADIUS_SQUARED = 2f;
 	public static float ATTRACTOR_ATTRACTION_RADIUS_SQUARED = 100;
 	public static float INODE_LENGTH = 0.5f;
-	public static boolean USE_BIAS_VECTORS = false;
 	public static float IDEAL_BRANCH_SLOPE = 0.5f;
 
 	public static float RADI_PER_CROSS_SECTION = 0.035f;
@@ -56,5 +55,8 @@ public class Configuration {
 	public static float ACCUM_CROSS_SECTION = 0.1f;
 	public static float NODE_CHILD_TOLERANCE = 0.1f;
 	
+	public static float TROPISM_WEIGHT = 10f;
+	public static float DIVERGENCE_WEIGHT = 10f;
+
 	public static float OUTSIDE_ENVELOPE_ATTRACTOR_TOLERANCE = 100;
 }
