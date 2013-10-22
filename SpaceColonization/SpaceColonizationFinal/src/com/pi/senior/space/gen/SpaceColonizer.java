@@ -112,10 +112,13 @@ public class SpaceColonizer {
 					tropism.y = Configuration.IDEAL_BRANCH_SLOPE;
 					tropism.normalize();
 
-					AttractionNode attracted = AttractionNode.computeNodeFor(
-							ndIterator, v, Configuration.USE_BIAS_VECTORS,
-							tropism,
-							Configuration.ATTRACTOR_ATTRACTION_RADIUS_SQUARED);
+					AttractionNode attracted = AttractionNode
+							.computeBestNodeFor(
+									ndIterator,
+									v,
+									Configuration.USE_BIAS_VECTORS,
+									tropism,
+									Configuration.ATTRACTOR_ATTRACTION_RADIUS_SQUARED);
 					synchronized (attractions) {
 						if (attracted != null) {
 							Vector curr = attractions.get(attracted
@@ -142,13 +145,13 @@ public class SpaceColonizer {
 			}
 		}
 		if (attractions.size() == 0 && attractors.size() > 0) {
-			// If we don't get any attractions, get the closest one & ignore the
-			// funny bizniz
+			// If we don't get any attractions, average all the ones within a
+			// certain distance of each other
 			AttractionNode bestAttracted = null;
 			for (Vector v : attractors) {
 				Iterator<Node> ndIterator = new NodeIterator(rootNode);
 
-				AttractionNode attracted = AttractionNode.computeNodeFor(
+				AttractionNode attracted = AttractionNode.computeBestNodeFor(
 						ndIterator, v, false, null, Float.MAX_VALUE);
 				if (attracted != null
 						&& (bestAttracted == null || attracted
@@ -156,9 +159,26 @@ public class SpaceColonizer {
 					bestAttracted = attracted;
 				}
 			}
+			// Now that we have the best ones average the nodes close to that
+			// distance away
 			if (bestAttracted != null) {
-				attractions.put(bestAttracted.getAttracted(),
-						bestAttracted.getGrowthDirection());
+				Vector accum = new Vector(0, 0, 0);
+				for (Vector v : attractors) {
+					AttractionNode attractionInformation = AttractionNode
+							.computeAttractionOf(bestAttracted.getAttracted(),
+									v, false, null);
+					if (Math.abs(attractionInformation.getWeightedDistance()
+							- bestAttracted.getWeightedDistance()) < Configuration.OUTSIDE_ENVELOPE_ATTRACTOR_TOLERANCE) {
+						accum.add(attractionInformation
+								.getGrowthDirection()
+								.multiply(
+										1f / (float) Math
+												.sqrt(attractionInformation
+														.getWeightedDistance())));
+					}
+				}
+				attractions
+						.put(bestAttracted.getAttracted(), accum.normalize());
 			}
 		}
 		System.out.println("Generated " + attractions.size()
