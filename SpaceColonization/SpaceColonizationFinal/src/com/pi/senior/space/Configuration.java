@@ -32,7 +32,7 @@ public class Configuration {
 		}
 	}
 
-	public static float envelopeBaseX = 0, envelopeBaseY = 15,
+	public static float envelopeBaseX = 0, envelopeBaseY = 0,
 			envelopeBaseZ = 0;
 	public static float envelopeSizeX = 25, envelopeSizeY = 10,
 			envelopeSizeZ = 25;
