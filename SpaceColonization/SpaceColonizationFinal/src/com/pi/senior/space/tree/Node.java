@@ -97,7 +97,7 @@ public class Node {
 	}
 
 	public float getRadius() {
-		return (float) Math.log(crossSection)
+		return (float) Math.pow(crossSection, 0.3f)
 				* Configuration.RADI_PER_CROSS_SECTION;
 	}
 

@@ -1,5 +1,8 @@
 package com.pi.senior.space.gen;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -306,6 +309,25 @@ public class SpaceColonizer {
 		try {
 			threadPool.awaitTermination(10000, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void saveSTL(File file) {
+		try {
+			BufferedWriter output = new BufferedWriter(new FileWriter(file));
+			int i = 0;
+			int len = 0;
+			for (CylinderVertexObject obj : vertexObjects) {
+				String stl = obj.getSTL("chunk-" + i);
+				output.write(stl);
+				len += stl.length();
+				i++;
+				output.newLine();
+			}
+			System.out.println("STL Length: " + len);
+			output.close();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

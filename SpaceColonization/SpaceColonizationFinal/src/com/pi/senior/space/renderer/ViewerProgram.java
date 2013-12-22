@@ -1,5 +1,6 @@
 package com.pi.senior.space.renderer;
 
+import java.io.File;
 import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
@@ -12,6 +13,7 @@ import org.lwjgl.opengl.GL11;
 import com.pi.senior.math.Vector;
 import com.pi.senior.space.AnaglyphConfigurator;
 import com.pi.senior.space.Configuration;
+import com.pi.senior.space.gen.HeartEnvelope;
 import com.pi.senior.space.gen.SpaceColonizer;
 import com.pi.senior.space.tree.Node;
 
@@ -26,8 +28,10 @@ public class ViewerProgram {
 	private StereoCamera cam;
 
 	public ViewerProgram() {
-		colonizer = new SpaceColonizer(new Node(new Vector(0, 0, 0)),
-				Configuration.createEnvelope());
+		colonizer = new SpaceColonizer(new Node(new Vector(0, 12.5f - 25f / 4f,
+				0)),
+		/* Configuration.createEnvelope() */new HeartEnvelope(new Vector(0,
+				12.5f, 0), new Vector(50, -50, 50)));
 		colonizer.generateAttractors();
 		AnaglyphConfigurator.show();
 		cam = new StereoCamera(45, 1, 20000);
@@ -125,6 +129,7 @@ public class ViewerProgram {
 
 	boolean triedEvolveLastLoop = false;
 	boolean triedSubdivideLastLoop = false;
+	boolean triedSaveLastLoop = false;
 
 	public void update() {
 		if (Keyboard.isKeyDown(Keyboard.KEY_A)) {
@@ -157,12 +162,23 @@ public class ViewerProgram {
 			triedEvolveLastLoop = false;
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_TAB)) {
-			Configuration.ATTRACTOR_COUNT *= Configuration.ATTRACTOR_COUNT_DEGREDATION;
-			Configuration.ATTRACTOR_KILL_RADIUS_SQUARED *= Configuration.ATTRACTOR_KILLER_DEGREDATION;
-			colonizer.generateAttractors();
+			if (!triedSubdivideLastLoop) {
+				Configuration.ATTRACTOR_COUNT *= Configuration.ATTRACTOR_COUNT_DEGREDATION;
+				Configuration.ATTRACTOR_KILL_RADIUS_SQUARED *= Configuration.ATTRACTOR_KILLER_DEGREDATION;
+				colonizer.generateAttractors();
+			}
 			triedSubdivideLastLoop = true;
 		} else {
 			triedSubdivideLastLoop = false;
+		}
+
+		if (Keyboard.isKeyDown(Keyboard.KEY_7)) {
+			if (!triedSaveLastLoop) {
+				colonizer.saveSTL(new File("./tree.stl"));
+			}
+			triedSaveLastLoop = true;
+		} else {
+			triedSaveLastLoop = false;
 		}
 	}
 

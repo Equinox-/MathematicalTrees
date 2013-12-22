@@ -21,7 +21,7 @@ public class CylinderVertexObject {
 				new Vector(0.577350269f, -0.577350269f, 0.577350269f))
 				.normalize();
 		Vector sEnd = Vector.crossProduct(change, rEnd).normalize();
-		
+
 		Vector rStart = Vector.crossProduct(startDirection,
 				new Vector(0.577350269f, -0.577350269f, 0.577350269f))
 				.normalize();
@@ -41,7 +41,7 @@ public class CylinderVertexObject {
 			float oSX = (cos * rStart.x) + (sin * sStart.x);
 			float oSY = (cos * rStart.y) + (sin * sStart.y);
 			float oSZ = (cos * rStart.z) + (sin * sStart.z);
-			
+
 			float oEX = (cos * rEnd.x) + (sin * sEnd.x);
 			float oEY = (cos * rEnd.y) + (sin * sEnd.y);
 			float oEZ = (cos * rEnd.z) + (sin * sEnd.z);
@@ -56,8 +56,8 @@ public class CylinderVertexObject {
 			indexBuffer.put(index);
 			index++;
 
-			vertexBuffer.put(end.x + (oEX * radEnd)).put(end.y + (oEY * radEnd))
-					.put(end.z + (oEZ * radEnd));
+			vertexBuffer.put(end.x + (oEX * radEnd))
+					.put(end.y + (oEY * radEnd)).put(end.z + (oEZ * radEnd));
 			normalBuffer.put(oEX).put(oEY).put(oEZ);
 
 			indexBuffer.put(index);
@@ -85,5 +85,45 @@ public class CylinderVertexObject {
 		GL11.glDisableClientState(GL11.GL_VERTEX_ARRAY);
 		GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
 		GL11.glDisableClientState(GL11.GL_COLOR_ARRAY);
+	}
+
+	public String getSTL(String solidName) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("solid " + solidName + "\n");
+		for (int i = 0; i < indexBuffer.limit() - 2; i++) {
+			builder.append("facet normal ");
+			float x = 0, y = 0, z = 0;
+
+			for (int iq = i; iq < i + 3; iq++) {
+				int idx = indexBuffer.get(iq) * 3;
+				x += normalBuffer.get(idx);
+				y += normalBuffer.get(idx + 1);
+				z += normalBuffer.get(idx + 2);
+			}
+			builder.append(x / 3f);
+			builder.append(' ');
+			builder.append(y / 3f);
+			builder.append(' ');
+			builder.append(z / 3f);
+			builder.append('\n');
+
+			// Triangle loop
+			builder.append("outer loop\n");
+			for (int iq = i; iq < i + 3; iq++) {
+				int idx = indexBuffer.get(iq) * 3;
+				builder.append("vertex ");
+				for (int iqx = idx; iqx < idx + 3; iqx++) {
+					if (iqx != idx) {
+						builder.append(' ');
+					}
+					builder.append(vertexBuffer.get(iqx));
+				}
+				builder.append('\n');
+			}
+			builder.append("endloop\nendfacet\n");
+		}
+
+		builder.append("endsolid  " + solidName + "\n");
+		return builder.toString();
 	}
 }
