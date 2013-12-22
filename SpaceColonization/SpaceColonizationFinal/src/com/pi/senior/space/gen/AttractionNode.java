@@ -50,7 +50,8 @@ public class AttractionNode implements Comparable<AttractionNode> {
 				dist2 += angleOfChange * divergenceWeight;
 			}
 		}
-		if (tropismWeight > 0) {
+		if (tropismWeight > 0 && idealDirection != null) {
+			idealDirection.normalize();
 			// A second bias is to compare to the root of the tree. In
 			// general branches should extend away from the root of the
 			// tree on the XZ plane. AKA tropism

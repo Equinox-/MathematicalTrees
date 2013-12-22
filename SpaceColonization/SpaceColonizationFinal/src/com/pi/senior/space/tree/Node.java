@@ -6,18 +6,24 @@ import java.util.List;
 
 import com.pi.senior.math.Vector;
 import com.pi.senior.space.Configuration;
+import com.pi.senior.space.util.WorldProvider;
 
 public class Node {
-
 	private List<Node> children = new ArrayList<Node>();
 	private Node parent;
 	private Vector position;
 	private Vector direction; // Cached for better performance
 	private float crossSection = Configuration.TIP_CROSS_SECTION;
+	private BudState budState = BudState.BUD;
+	private long budStateBegin;
 
-	public Node(Vector position) {
+	private WorldProvider worldProvider;
+
+	public Node(Vector position, WorldProvider worldProvider) {
 		this.position = position;
 		this.direction = new Vector(0, 1, 0);
+		this.worldProvider = worldProvider;
+		this.budStateBegin = worldProvider.currentTimeMillis();
 	}
 
 	public boolean addChild(Node child) {
@@ -103,5 +109,29 @@ public class Node {
 
 	public float getCrossSection() {
 		return crossSection;
+	}
+
+	public long getStateLifetime() {
+		return worldProvider.currentTimeMillis() - budStateBegin;
+	}
+
+	public void setBudState(BudState state) {
+		budStateBegin = worldProvider.currentTimeMillis();
+		budState = state;
+	}
+
+	public BudState getBudState() {
+		if (budState == BudState.BUD && getStateLifetime() > 1000) {
+			setBudState(BudState.LEAF);
+		}
+
+		if (budState == BudState.LEAF && getStateLifetime() > 1000) {
+			setBudState(BudState.NEW_BRANCH);
+		}
+
+		if (budState == BudState.NEW_BRANCH && getStateLifetime() > 30000) {
+			setBudState(BudState.OLD_BRANCH);
+		}
+		return budState;
 	}
 }

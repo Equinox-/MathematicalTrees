@@ -13,9 +13,7 @@ import org.lwjgl.opengl.GL11;
 import com.pi.senior.math.Vector;
 import com.pi.senior.space.AnaglyphConfigurator;
 import com.pi.senior.space.Configuration;
-import com.pi.senior.space.gen.HeartEnvelope;
 import com.pi.senior.space.gen.SpaceColonizer;
-import com.pi.senior.space.tree.Node;
 
 public class ViewerProgram {
 	private static final int TARGET_FPS = 60;
@@ -28,12 +26,11 @@ public class ViewerProgram {
 	private StereoCamera cam;
 
 	public ViewerProgram() {
-		colonizer = new SpaceColonizer(new Node(new Vector(0, 12.5f - 25f / 4f,
-				0)),
-		/* Configuration.createEnvelope() */new HeartEnvelope(new Vector(0,
-				12.5f, 0), new Vector(50, -50, 50)));
+		colonizer = new SpaceColonizer(new Vector(0, 0, 0),
+				Configuration.createEnvelope());
 		colonizer.generateAttractors();
-		AnaglyphConfigurator.show();
+
+		// AnaglyphConfigurator.show();
 		cam = new StereoCamera(45, 1, 20000);
 	}
 
@@ -43,7 +40,7 @@ public class ViewerProgram {
 		Display.setLocation((Display.getDesktopDisplayMode().getWidth() / 2)
 				- (width / 2),
 				(Display.getDesktopDisplayMode().getHeight() / 2)
-						- (height / 2));
+						- (height / 2) + 1080);
 		Display.setResizable(true);
 		Display.create();
 	}

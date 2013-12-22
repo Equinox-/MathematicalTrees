@@ -1,5 +1,6 @@
 package com.pi.senior.space.renderer;
 
+import java.awt.Color;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
@@ -8,14 +9,14 @@ import org.lwjgl.opengl.GL11;
 
 import com.pi.senior.math.Vector;
 
-public class CylinderVertexObject {
+public class CylinderVertexObject implements Renderable {
 	private ByteBuffer indexBuffer;
 	private FloatBuffer vertexBuffer;
 	private FloatBuffer colorBuffer;
 	private FloatBuffer normalBuffer;
 
 	public CylinderVertexObject(float radStart, float radEnd, int slices,
-			Vector start, Vector startDirection, Vector end) {
+			Vector start, Vector startDirection, Vector end, Color color) {
 		Vector change = end.clone().subtract(start).normalize();
 		Vector rEnd = Vector.crossProduct(change,
 				new Vector(0.577350269f, -0.577350269f, 0.577350269f))
@@ -46,7 +47,11 @@ public class CylinderVertexObject {
 			float oEY = (cos * rEnd.y) + (sin * sEnd.y);
 			float oEZ = (cos * rEnd.z) + (sin * sEnd.z);
 
-			colorBuffer.put(new float[] { 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f });
+			colorBuffer.put(new float[] { color.getRed() / 255f,
+					color.getGreen() / 255f, color.getBlue() / 255f,
+					color.getAlpha() / 255f, color.getRed() / 255f,
+					color.getGreen() / 255f, color.getBlue() / 255f,
+					color.getAlpha() / 255f });
 
 			vertexBuffer.put(start.x + (oSX * radStart))
 					.put(start.y + (oSY * radStart))

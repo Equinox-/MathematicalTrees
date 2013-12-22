@@ -1,5 +1,6 @@
 package com.pi.senior.space.gen;
 
+import java.awt.Color;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -23,24 +24,32 @@ import org.lwjgl.opengl.GL11;
 import com.pi.senior.math.Vector;
 import com.pi.senior.space.Configuration;
 import com.pi.senior.space.renderer.CylinderVertexObject;
+import com.pi.senior.space.renderer.LeafVertexObject;
+import com.pi.senior.space.renderer.Renderable;
+import com.pi.senior.space.tree.BudState;
 import com.pi.senior.space.tree.Node;
 import com.pi.senior.space.tree.NodeIterator;
+import com.pi.senior.space.util.Filter;
+import com.pi.senior.space.util.FilteredIterator;
+import com.pi.senior.space.util.WorldProvider;
 
-public class SpaceColonizer {
+public class SpaceColonizer implements WorldProvider {
 	private Node rootNode;
 	private Envelope populationArea;
 	private Random rand = new Random();
 
 	private List<Vector> attractors;
-
 	private int nodeCount = 1;
 
-	private ArrayList<CylinderVertexObject> vertexObjects = new ArrayList<CylinderVertexObject>();
-
+	private ArrayList<Renderable> vertexObjects = new ArrayList<Renderable>();
 	private ThreadPoolExecutor threadPool;
 
-	public SpaceColonizer(Node root, Envelope area) {
-		this.rootNode = root;
+	private long currentTime = 0;
+
+	public SpaceColonizer(Vector root, Envelope area) {
+		this.rootNode = new Node(root, this);
+		rootNode.setBudState(BudState.NEW_BRANCH);
+
 		this.populationArea = area;
 		this.threadPool = new ThreadPoolExecutor(Runtime.getRuntime()
 				.availableProcessors() * 2, Runtime.getRuntime()
@@ -109,11 +118,16 @@ public class SpaceColonizer {
 		for (final Vector v : attractors) {
 			Runnable runner = new Runnable() {
 				public void run() {
-					Iterator<Node> ndIterator = new NodeIterator(rootNode);
+					Iterator<Node> ndIterator = new FilteredIterator<Node>(
+							new NodeIterator(rootNode), new Filter<Node>() {
+								@Override
+								public boolean accept(Node t) {
+									return t.getBudState() == BudState.NEW_BRANCH;
+								}
+							});
 					Vector tropism = v.clone().subtract(rootNode.getPosition());
 					// We want to assume perfectly flat branching structures
 					tropism.y = Configuration.IDEAL_BRANCH_SLOPE;
-					tropism.normalize();
 
 					AttractionNode attracted = AttractionNode
 							.computeBestNodeFor(
@@ -155,7 +169,13 @@ public class SpaceColonizer {
 			// certain distance of each other
 			AttractionNode bestAttracted = null;
 			for (Vector v : attractors) {
-				Iterator<Node> ndIterator = new NodeIterator(rootNode);
+				Iterator<Node> ndIterator = new FilteredIterator<Node>(
+						new NodeIterator(rootNode), new Filter<Node>() {
+							@Override
+							public boolean accept(Node t) {
+								return t.getBudState() == BudState.NEW_BRANCH;
+							}
+						});
 
 				AttractionNode attracted = AttractionNode.computeBestNodeFor(
 						ndIterator, v, null, Float.MAX_VALUE, 0, 0);
@@ -194,6 +214,8 @@ public class SpaceColonizer {
 	}
 
 	public void evolve() {
+		currentTime += 1000;
+
 		// First step is to inspect every attraction vector and find the closest
 		// node.
 		Map<Node, Vector> attractions = generateAttractionVectors();
@@ -206,7 +228,7 @@ public class SpaceColonizer {
 		for (Entry<Node, Vector> dirSpec : dirSet) {
 			dirSpec.getValue().normalize().multiply(Configuration.INODE_LENGTH);
 			Node nd = new Node(dirSpec.getKey().getPosition().clone()
-					.add(dirSpec.getValue()));
+					.add(dirSpec.getValue()), this);
 			if (dirSpec.getKey().addChild(nd)) {
 				newNodes.add(nd);
 				++nodeCount;
@@ -255,9 +277,31 @@ public class SpaceColonizer {
 							.subtract(node.getParent().getPosition())
 							.normalize();
 				}
-				vertexObjects.add(new CylinderVertexObject(initRadius, node
-						.getRadius(), 10, node.getParent().getPosition(),
-						startDirection, node.getPosition()));
+				Color color = Color.white;
+				switch (node.getBudState()) {
+				case BUD:
+					color = Color.blue;
+					break;
+				case LEAF:
+					color = Color.green;
+					break;
+				case NEW_BRANCH:
+					color = new Color(139, 69, 19);
+					break;
+				case OLD_BRANCH:
+					color = new Color(100, 49, 0);
+					break;
+				default:
+					color = Color.white;
+				}
+				if (node.getBudState() == BudState.LEAF) {
+					vertexObjects.add(new LeafVertexObject(10, node.getParent()
+							.getPosition(), startDirection, color));
+				} else {
+					vertexObjects.add(new CylinderVertexObject(initRadius, node
+							.getRadius(), 10, node.getParent().getPosition(),
+							startDirection, node.getPosition(), color));
+				}
 			}
 		}
 		System.out.println("Generated " + (nodeCount - 1) + " cylinders "
@@ -285,6 +329,25 @@ public class SpaceColonizer {
 		while (nodes.hasNext()) {
 			Node n = nodes.next();
 			if (n.getParent() != null) {
+				Color color = Color.white;
+				switch (n.getBudState()) {
+				case BUD:
+					color = Color.blue;
+					break;
+				case LEAF:
+					color = Color.green;
+					break;
+				case NEW_BRANCH:
+					color = new Color(139, 69, 19);
+					break;
+				case OLD_BRANCH:
+					color = new Color(80, 40, 0);
+					break;
+				default:
+					color = Color.white;
+				}
+				GL11.glColor4f(color.getRed() / 255f, color.getGreen() / 255f,
+						color.getBlue() / 255f, color.getAlpha() / 255f);
 				GL11.glVertex3f(n.getPosition().x, n.getPosition().y,
 						n.getPosition().z);
 				GL11.glVertex3f(n.getParent().getPosition().x, n.getParent()
@@ -298,7 +361,7 @@ public class SpaceColonizer {
 	public void renderCylinderConnectors() {
 		GL11.glEnable(GL11.GL_LIGHTING);
 		// Now render the cylinders
-		for (CylinderVertexObject obj : vertexObjects) {
+		for (Renderable obj : vertexObjects) {
 			obj.render();
 		}
 	}
@@ -318,17 +381,25 @@ public class SpaceColonizer {
 			BufferedWriter output = new BufferedWriter(new FileWriter(file));
 			int i = 0;
 			int len = 0;
-			for (CylinderVertexObject obj : vertexObjects) {
-				String stl = obj.getSTL("chunk-" + i);
-				output.write(stl);
-				len += stl.length();
-				i++;
-				output.newLine();
+			for (Renderable obj : vertexObjects) {
+				if (obj instanceof CylinderVertexObject) {
+					String stl = ((CylinderVertexObject) obj).getSTL("chunk-"
+							+ i);
+					output.write(stl);
+					len += stl.length();
+					i++;
+					output.newLine();
+				}
 			}
 			System.out.println("STL Length: " + len);
 			output.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public long currentTimeMillis() {
+		return currentTime;
 	}
 }
