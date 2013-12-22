@@ -1,6 +1,7 @@
 package com.pi.senior.space;
 
 import java.awt.AlphaComposite;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
@@ -33,7 +34,7 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 					.showInputDialog("Enter your message.") };
 			args[0] = args[0].replace("\\n", "\n");
 		}
-		new SpaceTechDemo2D(args[0]);//.dispose();
+		new SpaceTechDemo2D(args[0]);// .dispose();
 	}
 
 	public SpaceTechDemo2D(String render) {
@@ -44,7 +45,8 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 
 		renderers = new CharacterRenderer[render.length()];
 		Graphics g = getGraphics();
-		g.setFont(getFont().deriveFont(200f));
+		Font f = new Font("Aniron", Font.PLAIN, 200);
+		g.setFont(f.deriveFont(200f));
 		for (int i = 0; i < renderers.length; i++) {
 			renderers[i] = new CharacterRenderer(Character.valueOf(render
 					.charAt(i)), g);
@@ -53,7 +55,7 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 		}
 		g.dispose();
 
-		//update(1000);
+		// update(1000);
 		repaint();
 		addMouseListener(this);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -162,10 +164,10 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		//for (int i = 0; i < 10; i++) {
-			update(3);
-			repaint();
-		//}
+		// for (int i = 0; i < 10; i++) {
+		update(3);
+		repaint();
+		// }
 	}
 
 	@Override

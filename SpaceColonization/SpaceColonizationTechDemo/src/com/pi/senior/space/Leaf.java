@@ -1,5 +1,7 @@
 package com.pi.senior.space;
 
+import java.awt.Color;
+
 import com.pi.senior.math.Vector;
 
 public class Leaf extends Vector {
