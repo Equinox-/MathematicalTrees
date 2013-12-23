@@ -1,0 +1,4 @@
+- [ ] Hierarchial tree structure based on nodes
+- [ ] Compile absolute bounding box tree and absolute node positions
+- [ ] Bud possibility creation
+	- [ ] At every newer junction buds are possible
