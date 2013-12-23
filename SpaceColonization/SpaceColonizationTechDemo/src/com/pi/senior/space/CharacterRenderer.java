@@ -23,14 +23,14 @@ import com.pi.senior.math.Vector;
 
 public class CharacterRenderer {
 	public static final int MARGINS = 25;
-	public static final int ASSUME_PADDING = -5;
+	public static final int ASSUME_PADDING = 10;
 	private static final float FLOATING_POINT_MATH = 0.5f;
 	private static final float NODE_SIZE = 1f;
-	private static final int LEAF_SIZE = 3;
+	private static final int LEAF_SIZE = 5;
 	private static final float NODE_VIEWPORT = 30;
-	private static final float ATTRACTOR_TOLERANCE = .35f;// 1.25f
+	private static final float ATTRACTOR_TOLERANCE = 1.25f;//0.35f;// 1.25f;
 	private static final float ENTRY_ATTRACTOR_TOLERANCE = 25f;
-	private static final float ATTRACTOR_DENSITY = 0.075f; // .03f Per pixel
+	private static final float ATTRACTOR_DENSITY = .03f;//.1f;// .03f;// Per pixel
 	private static final float ATTRACTORS_ANOTHER_CHUNK = 5;
 
 	private List<Vector> nodes = new ArrayList<Vector>();
@@ -72,8 +72,66 @@ public class CharacterRenderer {
 
 		g2.drawString(c.toString(), 0, (int) -characterBounds.getY());
 
+		// Images are expensive
+		this.threadPool = new ThreadPoolExecutor(Runtime.getRuntime()
+				.availableProcessors() * 2, Runtime.getRuntime()
+				.availableProcessors() * 4, 1000, TimeUnit.MILLISECONDS,
+				new LinkedBlockingQueue<Runnable>());
+
 		genAttractors();
-		genStarters();
+		genCharacterStarters();
+		System.out.println("Generated " + attractionVectors.size()
+				+ " attractors with " + nodeHeads + " heads");
+	}
+
+	public CharacterRenderer(String s, Graphics g, float spacing) {
+		this.c = s.charAt(0);
+		Rectangle2D cBounds = new Rectangle2D.Float(0, 0, 0, 0);
+		for (int i = 0; i < s.length(); i++) {
+			Rectangle2D tmp = g.getFontMetrics().getStringBounds(
+					Character.toString(s.charAt(i)), g);
+			cBounds.setRect(0, 0,
+					cBounds.getWidth() + tmp.getWidth() - (i>0?spacing:0),
+					Math.max(tmp.getHeight(), cBounds.getHeight()));
+		}
+		if (cBounds.getWidth() <= 0.0 || cBounds.getHeight() <= 0.0) {
+			return;
+		}
+		System.out.println(cBounds);
+		mask = new BufferedImage((int) Math.ceil(cBounds.getWidth()),
+				(int) Math.ceil(cBounds.getHeight()),
+				BufferedImage.TYPE_INT_ARGB);
+		dest = new BufferedImage((int) Math.ceil(cBounds.getWidth())
+				+ (MARGINS * 2), (int) Math.ceil(cBounds.getHeight())
+				+ (MARGINS * 2), BufferedImage.TYPE_INT_ARGB);
+		Graphics g2 = mask.getGraphics();
+		g2.setColor(Color.WHITE);
+		g2.fillRect(0, 0, mask.getWidth(), mask.getHeight());
+		g2.setFont(g.getFont());
+		g2.setColor(Color.BLACK);
+		// characterBounds = g2.getFontMetrics().getStringBounds(c.toString(),
+		// g2);
+
+		characterBounds = new Rectangle2D.Float(0, 0, 0, 0);
+		for (int i = 0; i < s.length(); i++) {
+			Rectangle2D tmp = g2.getFontMetrics().getStringBounds(
+					Character.toString(s.charAt(i)), g);
+			g2.drawString(Character.toString(s.charAt(i)),
+					(int) (characterBounds.getWidth() - (i>0?spacing:0)),
+					(int) -tmp.getY());
+			characterBounds.setRect(0, 0,
+					characterBounds.getWidth() + tmp.getWidth() - spacing,
+					Math.max(tmp.getHeight(), characterBounds.getHeight()));
+		}
+
+		// Images are expensive
+		this.threadPool = new ThreadPoolExecutor(Runtime.getRuntime()
+				.availableProcessors() * 2, Runtime.getRuntime()
+				.availableProcessors() * 4, 1000, TimeUnit.MILLISECONDS,
+				new LinkedBlockingQueue<Runnable>());
+
+		genAttractors();
+		genCharacterStarters();
 		System.out.println("Generated " + attractionVectors.size()
 				+ " attractors with " + nodeHeads + " heads");
 	}
@@ -93,7 +151,7 @@ public class CharacterRenderer {
 				new LinkedBlockingQueue<Runnable>());
 
 		genAttractors();
-		genStarters();
+		genImageStarters();
 		System.out.println("Generated " + attractionVectors.size()
 				+ " attractors with " + nodeHeads + " heads");
 	}
@@ -123,12 +181,75 @@ public class CharacterRenderer {
 		}
 	}
 
-	private void genStarters() {
-		if (c == '\0') {
-			for (int x = 0; x < mask.getWidth(); x += mask.getWidth() / 4) {
-				nodes.add(new Vector(x, 0, 0));
-				nodeHeads++;
+	private void genImageStarters() {
+		for (int x = 0; x < mask.getWidth(); x += mask.getWidth() / 4) {
+			nodes.add(new Vector(x, 0, 0));
+			nodeHeads++;
+		}
+		Iterator<Vector> vItr = attractionVectors.iterator();
+		while (vItr.hasNext()) {
+			Vector vTest = vItr.next();
+			for (Vector v2 : nodes) {
+				if (v2.dist(vTest) < ATTRACTOR_TOLERANCE) {
+					vItr.remove();
+					break;
+				}
 			}
+		}
+	}
+
+	private void genCharacterStarters() {
+		nodeHeads = 0;
+		double bestY = Double.MIN_VALUE;
+		Vector bestV = null;
+		major: for (Vector v : attractionVectors) {
+			if (v.y > bestY) {
+				for (Vector v2 : nodes) {
+					if (v2.dist(v) < ENTRY_ATTRACTOR_TOLERANCE) {
+						continue major;
+					}
+				}
+				bestY = v.y;
+				bestV = v;
+			}
+		}
+		if (bestV != null) {
+			nodes.add(bestV);
+			nodeHeads++;
+
+			Iterator<Vector> vItr = attractionVectors.iterator();
+			while (vItr.hasNext()) {
+				Vector vTest = vItr.next();
+				for (Vector v : nodes) {
+					if (v.dist(vTest) < ATTRACTOR_TOLERANCE) {
+						vItr.remove();
+						break;
+					}
+				}
+			}
+		} else {
+			return;
+		}
+
+		for (int i = 0; i < 10; i++) {
+			Vector vv = null;
+			major: for (Vector v : attractionVectors) {
+				if (v.y > bestY - (ATTRACTOR_TOLERANCE / 2)) {
+					for (Vector v2 : nodes) {
+						if (v2.dist(v) < ENTRY_ATTRACTOR_TOLERANCE) {
+							continue major;
+						}
+					}
+					vv = v;
+					break;
+				}
+			}
+			if (vv == null) {
+				break;
+			}
+			nodes.add(vv);
+			nodeHeads++;
+
 			Iterator<Vector> vItr = attractionVectors.iterator();
 			while (vItr.hasNext()) {
 				Vector vTest = vItr.next();
@@ -136,69 +257,6 @@ public class CharacterRenderer {
 					if (v2.dist(vTest) < ATTRACTOR_TOLERANCE) {
 						vItr.remove();
 						break;
-					}
-				}
-			}
-		} else {
-			nodeHeads = 0;
-			double bestY = Double.MIN_VALUE;
-			Vector bestV = null;
-			major: for (Vector v : attractionVectors) {
-				if (v.y > bestY) {
-					for (Vector v2 : nodes) {
-						if (v2.dist(v) < ENTRY_ATTRACTOR_TOLERANCE) {
-							continue major;
-						}
-					}
-					bestY = v.y;
-					bestV = v;
-				}
-			}
-			if (bestV != null) {
-				nodes.add(bestV);
-				nodeHeads++;
-
-				Iterator<Vector> vItr = attractionVectors.iterator();
-				while (vItr.hasNext()) {
-					Vector vTest = vItr.next();
-					for (Vector v : nodes) {
-						if (v.dist(vTest) < ATTRACTOR_TOLERANCE) {
-							vItr.remove();
-							break;
-						}
-					}
-				}
-			} else {
-				return;
-			}
-
-			for (int i = 0; i < 3; i++) {
-				Vector vv = null;
-				major: for (Vector v : attractionVectors) {
-					if (v.y > bestY - (ATTRACTOR_TOLERANCE / 2)) {
-						for (Vector v2 : nodes) {
-							if (v2.dist(v) < ENTRY_ATTRACTOR_TOLERANCE) {
-								continue major;
-							}
-						}
-						vv = v;
-						break;
-					}
-				}
-				if (vv == null) {
-					break;
-				}
-				nodes.add(vv);
-				nodeHeads++;
-
-				Iterator<Vector> vItr = attractionVectors.iterator();
-				while (vItr.hasNext()) {
-					Vector vTest = vItr.next();
-					for (Vector v2 : nodes) {
-						if (v2.dist(vTest) < ATTRACTOR_TOLERANCE) {
-							vItr.remove();
-							break;
-						}
 					}
 				}
 			}
@@ -325,7 +383,7 @@ public class CharacterRenderer {
 
 		if (c != '\0' && nodeHeads == 0
 				&& attractionVectors.size() > ATTRACTORS_ANOTHER_CHUNK) {
-			genStarters();
+			genCharacterStarters();
 		}
 		System.out.println("Update " + (c == '\0' ? "Image" : c.toString())
 				+ "\tAttractors: " + attractionVectors.size() + ";\tNodes: "

@@ -1,5 +1,6 @@
 package com.pi.senior.space;
 
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
@@ -14,24 +15,25 @@ public class ImageTechDemo2D extends JFrame implements MouseListener {
 	private CharacterRenderer imageRenderer;
 
 	public static void main(String[] args) throws IOException {
-		new ImageTechDemo2D(new File(
-				"/tmp/1476512_778385558844520_1092994521_n.jpg"));
+		new ImageTechDemo2D(new File("/tmp/SAM_0863.JPG"));
 	}
 
 	public ImageTechDemo2D(File image) throws IOException {
 		super("Image Tech Demo 2D");
 		setSize(1366, 600);
 		setVisible(true);
-
-		imageRenderer = new CharacterRenderer(ImageIO.read(image));
-
+		Graphics g2 = getGraphics();
+		Font f = new Font("Aniron", Font.PLAIN, 200);
+		g2.setFont(f.deriveFont(500f));
+		imageRenderer = new CharacterRenderer("Merry Christmas", g2, 125f);// ImageIO.read(image));
+		
 		// update(1000);
 		repaint();
 		addMouseListener(this);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		while (!imageRenderer.isSortaComplete()) {
 			update(5);
-			
+
 			Graphics g = getContentPane().getGraphics();
 			g.clearRect(0, 0, getWidth(), getHeight());
 			Graphics2D gg = ((Graphics2D) g);

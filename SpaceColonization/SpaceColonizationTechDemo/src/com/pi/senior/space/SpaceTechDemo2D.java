@@ -46,8 +46,8 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 		renderers = new CharacterRenderer[render.length()];
 		Graphics g = getGraphics();
 		Font f = new Font("Aniron", Font.PLAIN, 200);
-		g.setFont(f.deriveFont(200f));
-		for (int i = 0; i < renderers.length; i++) {
+		g.setFont(f.deriveFont(500f));
+		for (int i = 0; i < renderers.length; i++) { 
 			renderers[i] = new CharacterRenderer(Character.valueOf(render
 					.charAt(i)), g);
 			System.out.println("Created renderer for: " + render.charAt(i)
@@ -55,8 +55,10 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 		}
 		g.dispose();
 
-		// update(1000);
-		repaint();
+		for (int i = 0; i < 100; i++) {
+			update(100);
+			paint(g);
+		}
 		addMouseListener(this);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
@@ -67,10 +69,10 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 			final CharacterRenderer rr = tmp;
 			tasks.add(poolExecutor.submit(new Runnable() {
 				public void run() {
-					for (int i = 0; i < maxSteps && !rr.isComplete(); i++) {
+					for (int i = 0; i < maxSteps && !rr.isSortaComplete(); i++) {
 						rr.update();
 					}
-					rr.paint();
+					rr.cleanPaint();
 				}
 			}));
 		}
@@ -84,7 +86,7 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 
 	private void renderText(Graphics gg) {
 		int left = CharacterRenderer.MARGINS;
-		int yOff = 0;
+		int yOff = -100;
 		int maxRowHeight = 0;
 		for (CharacterRenderer rr : renderers) {
 			if (rr != null) {
@@ -121,6 +123,7 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 		int tHeight = 0;
 		for (CharacterRenderer rr : renderers) {
 			if (rr != null) {
+				rr.cleanPaint();
 				if (rr.getCharacter().charValue() == '\n') {
 					width = Math.max(width, tWidth);
 					tWidth = 0;
