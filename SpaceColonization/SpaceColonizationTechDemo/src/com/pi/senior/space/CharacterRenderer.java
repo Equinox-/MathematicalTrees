@@ -28,9 +28,10 @@ public class CharacterRenderer {
 	private static final float NODE_SIZE = 1f;
 	private static final int LEAF_SIZE = 5;
 	private static final float NODE_VIEWPORT = 30;
-	private static final float ATTRACTOR_TOLERANCE = 1.25f;//0.35f;// 1.25f;
+	private static final float ATTRACTOR_TOLERANCE = 1.25f;// 0.35f;// 1.25f;
 	private static final float ENTRY_ATTRACTOR_TOLERANCE = 25f;
-	private static final float ATTRACTOR_DENSITY = .03f;//.1f;// .03f;// Per pixel
+	private static final float ATTRACTOR_DENSITY = .03f;// .1f;// .03f;// Per
+														// pixel
 	private static final float ATTRACTORS_ANOTHER_CHUNK = 5;
 
 	private List<Vector> nodes = new ArrayList<Vector>();
@@ -84,15 +85,18 @@ public class CharacterRenderer {
 				+ " attractors with " + nodeHeads + " heads");
 	}
 
-	public CharacterRenderer(String s, Graphics g, float spacing) {
+	public CharacterRenderer(String s, Graphics g, float spacing,
+			float spacingBase) {
 		this.c = s.charAt(0);
 		Rectangle2D cBounds = new Rectangle2D.Float(0, 0, 0, 0);
+		Rectangle2D lastTmp = null;
 		for (int i = 0; i < s.length(); i++) {
 			Rectangle2D tmp = g.getFontMetrics().getStringBounds(
 					Character.toString(s.charAt(i)), g);
-			cBounds.setRect(0, 0,
-					cBounds.getWidth() + tmp.getWidth() - (i>0?spacing:0),
+			cBounds.setRect(0, 0, cBounds.getWidth() + tmp.getWidth()
+					- (i > 0 ? spacing * lastTmp.getWidth() + spacingBase : 0),
 					Math.max(tmp.getHeight(), cBounds.getHeight()));
+			lastTmp = tmp;
 		}
 		if (cBounds.getWidth() <= 0.0 || cBounds.getHeight() <= 0.0) {
 			return;
@@ -117,11 +121,13 @@ public class CharacterRenderer {
 			Rectangle2D tmp = g2.getFontMetrics().getStringBounds(
 					Character.toString(s.charAt(i)), g);
 			g2.drawString(Character.toString(s.charAt(i)),
-					(int) (characterBounds.getWidth() - (i>0?spacing:0)),
+					(int) (characterBounds.getWidth() - (i > 0 ? spacing
+							* lastTmp.getWidth() + spacingBase : 0)),
 					(int) -tmp.getY());
 			characterBounds.setRect(0, 0,
 					characterBounds.getWidth() + tmp.getWidth() - spacing,
 					Math.max(tmp.getHeight(), characterBounds.getHeight()));
+			lastTmp = tmp;
 		}
 
 		// Images are expensive

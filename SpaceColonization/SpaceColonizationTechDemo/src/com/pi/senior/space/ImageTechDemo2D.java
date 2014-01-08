@@ -1,5 +1,6 @@
 package com.pi.senior.space;
 
+import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -10,12 +11,13 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 public class ImageTechDemo2D extends JFrame implements MouseListener {
 	private CharacterRenderer imageRenderer;
 
 	public static void main(String[] args) throws IOException {
-		new ImageTechDemo2D(new File("/tmp/SAM_0863.JPG"));
+		new ImageTechDemo2D(null);
 	}
 
 	public ImageTechDemo2D(File image) throws IOException {
@@ -23,10 +25,13 @@ public class ImageTechDemo2D extends JFrame implements MouseListener {
 		setSize(1366, 600);
 		setVisible(true);
 		Graphics g2 = getGraphics();
-		Font f = new Font("Aniron", Font.PLAIN, 200);
+		FontChooser chooser = new FontChooser(this);
+		chooser.show();
+		Font f = chooser.getSelectedFont();//new Font(JOptionPane.showInputDialog(this, ), Font.PLAIN, 200);
 		g2.setFont(f.deriveFont(500f));
-		imageRenderer = new CharacterRenderer("Merry Christmas", g2, 125f);// ImageIO.read(image));
-		
+		imageRenderer = new CharacterRenderer(JOptionPane.showInputDialog(this,
+				"What do you want to say?"), g2, -0.075f, 125f);// ImageIO.read(image));
+
 		// update(1000);
 		repaint();
 		addMouseListener(this);
@@ -40,8 +45,12 @@ public class ImageTechDemo2D extends JFrame implements MouseListener {
 			renderText(gg);
 		}
 		imageRenderer.cleanPaint();
-		ImageIO.write(imageRenderer.getOutput(), "PNG",
-				new File(image.getAbsolutePath() + "-out.png"));
+		ImageIO.write(imageRenderer.getOutput(), "PNG", new File("majorOutput.png"));
+		try {
+			Desktop.getDesktop().open(new File("majorOutput.png"));
+		} catch (Exception e) {
+		}
+		dispose();
 	}
 
 	public void update(final int maxSteps) {
