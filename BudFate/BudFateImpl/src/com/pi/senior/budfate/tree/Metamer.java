@@ -3,32 +3,32 @@ package com.pi.senior.budfate.tree;
 import com.pi.senior.math.Vector;
 import com.pi.senior.world.WorldProvider;
 
-public class BudNode {
+public class Metamer {
 	// Hierarchy information
 	private Vector endPosition;
 	private Vector startPosition;
 
-	private BudNode parent;
+	private Metamer parent;
 
 	// State and Type spec
-	private BudState state;
-	private final BudType type;
+	private MetamerState state;
+	private final MetamerType type;
 
 	// Extra State Information
 	private long stateBegin;
 	private long creationTime;
 
-	public BudNode(BudNode parent, BudType type, Vector startPosition) {
+	public Metamer(Metamer parent, MetamerType type, Vector startPosition) {
 		this(parent, type, startPosition, startPosition.clone());
 	}
 
-	public BudNode(BudNode parent, BudType type, Vector startPosition,
+	public Metamer(Metamer parent, MetamerType type, Vector startPosition,
 			Vector endPosition) {
 		this.type = type;
 		this.parent = parent;
 		this.startPosition = startPosition;
 		this.endPosition = endPosition;
-		this.state = BudState.BUD_LIVE;
+		this.state = MetamerState.BUD_LIVE;
 		this.creationTime = WorldProvider.currentTimeMillis();
 	}
 
@@ -49,15 +49,15 @@ public class BudNode {
 		return endPosition;
 	}
 
-	public BudType getBudType() {
+	public MetamerType getBudType() {
 		return type;
 	}
 
-	public BudState getBudState() {
+	public MetamerState getBudState() {
 		return state;
 	}
 
-	public void changeBudState(BudState s) {
+	public void changeBudState(MetamerState s) {
 		this.stateBegin = WorldProvider.currentTimeMillis();
 		this.state = s;
 	}

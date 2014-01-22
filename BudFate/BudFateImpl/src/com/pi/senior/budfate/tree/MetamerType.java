@@ -1,5 +1,5 @@
 package com.pi.senior.budfate.tree;
 
-public enum BudType {
+public enum MetamerType {
 	LATERAL, TERMINAL;
 }
