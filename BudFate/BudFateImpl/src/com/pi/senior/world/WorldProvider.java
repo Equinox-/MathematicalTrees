@@ -18,4 +18,13 @@ public class WorldProvider {
 			return getInstance().currentTimeMillis();
 		}
 	}
+
+
+	public static double nextRandom() {
+		if (getInstance() == null) {
+			return Math.random();
+		} else {
+			return getInstance().nextRandom();
+		}
+	}
 }
