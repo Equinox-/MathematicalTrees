@@ -7,7 +7,7 @@ import java.nio.FloatBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
-import com.pi.senior.math.Vector;
+import com.pi.senior.math.Vector3D;
 
 public class LeafVertexObject implements Renderable {
 	private ByteBuffer indexBuffer;
@@ -15,10 +15,11 @@ public class LeafVertexObject implements Renderable {
 	private FloatBuffer colorBuffer;
 	private FloatBuffer normalBuffer;
 
-	public LeafVertexObject(int slices, Vector start, Vector direction,
-			Color color) {
-		Vector up = new Vector(0, 1, 0);
-		Vector crossed = Vector.crossProduct(direction, up).normalize();
+	public LeafVertexObject(int slices, Vector3D start, Vector3D direction,
+			Color color, float size) {
+		Vector3D up = new Vector3D((float) Math.random() / 2f, 1,
+				(float) Math.random() / 2f);
+		Vector3D crossed = Vector3D.crossProduct(direction, up).normalize();
 		direction.normalize();
 
 		vertexBuffer = BufferUtils.createFloatBuffer(slices * 3);
@@ -28,12 +29,12 @@ public class LeafVertexObject implements Renderable {
 
 		for (int i = 0; i < slices; i++) {
 			float angle = (float) (i * (Math.PI * 2.0 / slices));
-			float x = ((float) (Math.cos(angle) * 2.0) + 2.0f) / 5f;
-			float y = (float) Math.sin(angle) / 5f;
-			Vector pos = start.clone().add(crossed.clone().multiply(y))
+			float x = size * ((float) (Math.cos(angle) * 2.0) + 2.0f) / 5f;
+			float y = size * (float) Math.sin(angle) / 5f;
+			Vector3D pos = start.clone().add(crossed.clone().multiply(y))
 					.add(direction.clone().multiply(x));
 			vertexBuffer.put(new float[] { pos.x, pos.y, pos.z });
-			normalBuffer.put(new float[] { up.x, up.y, up.z });
+			normalBuffer.put(new float[] { up.x, -up.y, up.z });
 			colorBuffer.put(new float[] { color.getRed() / 255f,
 					color.getGreen() / 255f, color.getBlue() / 255f,
 					color.getAlpha() / 255f });

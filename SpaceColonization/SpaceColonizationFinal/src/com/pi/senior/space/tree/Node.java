@@ -4,24 +4,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.pi.senior.math.Vector;
+import com.pi.senior.math.Vector3D;
 import com.pi.senior.space.Configuration;
 import com.pi.senior.space.util.WorldProvider;
 
 public class Node {
 	private List<Node> children = new ArrayList<Node>();
 	private Node parent;
-	private Vector position;
-	private Vector direction; // Cached for better performance
+	private Vector3D position;
+	private Vector3D direction; // Cached for better performance
 	private float crossSection = Configuration.TIP_CROSS_SECTION;
 	private BudState budState = BudState.BUD;
 	private long budStateBegin;
 
 	private WorldProvider worldProvider;
 
-	public Node(Vector position, WorldProvider worldProvider) {
+	public Node(Vector3D position, WorldProvider worldProvider) {
 		this.position = position;
-		this.direction = new Vector(0, 1, 0);
+		this.direction = new Vector3D(0, 1, 0);
 		this.worldProvider = worldProvider;
 		this.budStateBegin = worldProvider.currentTimeMillis();
 	}
@@ -59,7 +59,7 @@ public class Node {
 		return true;
 	}
 
-	public Vector getPosition() {
+	public Vector3D getPosition() {
 		return position;
 	}
 
@@ -67,7 +67,7 @@ public class Node {
 		return parent;
 	}
 
-	public Vector getDirection() {
+	public Vector3D getDirection() {
 		return direction;
 	}
 
@@ -130,7 +130,7 @@ public class Node {
 		}
 
 		if (budState == BudState.NEW_BRANCH && getStateLifetime() > 30000) {
-			setBudState(BudState.OLD_BRANCH);
+			//setBudState(BudState.OLD_BRANCH);
 		}
 		return budState;
 	}

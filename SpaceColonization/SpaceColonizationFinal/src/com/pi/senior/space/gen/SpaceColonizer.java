@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.lwjgl.opengl.GL11;
 
-import com.pi.senior.math.Vector;
+import com.pi.senior.math.Vector3D;
 import com.pi.senior.space.Configuration;
 import com.pi.senior.space.renderer.CylinderVertexObject;
 import com.pi.senior.space.renderer.LeafVertexObject;
@@ -38,7 +38,7 @@ public class SpaceColonizer implements WorldProvider {
 	private Envelope populationArea;
 	private Random rand = new Random();
 
-	private List<Vector> attractors;
+	private List<Vector3D> attractors;
 	private int nodeCount = 1;
 
 	private ArrayList<Renderable> vertexObjects = new ArrayList<Renderable>();
@@ -46,7 +46,7 @@ public class SpaceColonizer implements WorldProvider {
 
 	private long currentTime = 0;
 
-	public SpaceColonizer(Vector root, Envelope area) {
+	public SpaceColonizer(Vector3D root, Envelope area) {
 		this.rootNode = new Node(root, this);
 		rootNode.setBudState(BudState.NEW_BRANCH);
 
@@ -59,7 +59,7 @@ public class SpaceColonizer implements WorldProvider {
 
 	public void generateAttractors() {
 		long startTime = System.nanoTime();
-		attractors = new ArrayList<Vector>(Configuration.ATTRACTOR_COUNT);
+		attractors = new ArrayList<Vector3D>(Configuration.ATTRACTOR_COUNT);
 		for (int i = 0; i < Configuration.ATTRACTOR_COUNT; ++i) {
 			attractors.add(populationArea.nextRandom(rand));
 		}
@@ -75,12 +75,12 @@ public class SpaceColonizer implements WorldProvider {
 		int startCount = attractors.size();
 
 		// Kill off old attractors
-		Iterator<Vector> attractionItr = attractors.iterator();
-		Stack<Future<Vector>> futures = new Stack<Future<Vector>>();
+		Iterator<Vector3D> attractionItr = attractors.iterator();
+		Stack<Future<Vector3D>> futures = new Stack<Future<Vector3D>>();
 		while (attractionItr.hasNext()) {
-			final Vector kill = attractionItr.next();
-			Callable<Vector> runner = new Callable<Vector>() {
-				public Vector call() {
+			final Vector3D kill = attractionItr.next();
+			Callable<Vector3D> runner = new Callable<Vector3D>() {
+				public Vector3D call() {
 					try {
 						Iterator<Node> nodes = iteratorFactory.call();
 						while (nodes.hasNext()) {
@@ -98,7 +98,7 @@ public class SpaceColonizer implements WorldProvider {
 		}
 		while (!futures.empty()) {
 			try {
-				Vector v = futures.pop().get(1000, TimeUnit.SECONDS);
+				Vector3D v = futures.pop().get(1000, TimeUnit.SECONDS);
 				if (v != null) {
 					attractors.remove(v);
 				}
@@ -110,12 +110,12 @@ public class SpaceColonizer implements WorldProvider {
 				+ ((System.nanoTime() - startTime) / 1000000.0) + " ms");
 	}
 
-	private Map<Node, Vector> generateAttractionVectors() {
+	private Map<Node, Vector3D> generateAttractionVectors() {
 		long startTime = System.nanoTime();
-		final Map<Node, Vector> attractions = new HashMap<Node, Vector>(
+		final Map<Node, Vector3D> attractions = new HashMap<Node, Vector3D>(
 				nodeCount);
 		Stack<Future<?>> futures = new Stack<Future<?>>();
-		for (final Vector v : attractors) {
+		for (final Vector3D v : attractors) {
 			Runnable runner = new Runnable() {
 				public void run() {
 					Iterator<Node> ndIterator = new FilteredIterator<Node>(
@@ -125,7 +125,8 @@ public class SpaceColonizer implements WorldProvider {
 									return t.getBudState() == BudState.NEW_BRANCH;
 								}
 							});
-					Vector tropism = v.clone().subtract(rootNode.getPosition());
+					Vector3D tropism = v.clone().subtract(
+							rootNode.getPosition());
 					// We want to assume perfectly flat branching structures
 					tropism.y = Configuration.IDEAL_BRANCH_SLOPE;
 
@@ -139,10 +140,10 @@ public class SpaceColonizer implements WorldProvider {
 									Configuration.TROPISM_WEIGHT);
 					synchronized (attractions) {
 						if (attracted != null) {
-							Vector curr = attractions.get(attracted
+							Vector3D curr = attractions.get(attracted
 									.getAttracted());
 							if (curr == null) {
-								curr = new Vector(0, 0, 0);
+								curr = new Vector3D(0, 0, 0);
 								attractions.put(attracted.getAttracted(), curr);
 							}
 							curr.add(attracted.getGrowthDirection().multiply(
@@ -168,7 +169,7 @@ public class SpaceColonizer implements WorldProvider {
 			// If we don't get any attractions, average all the ones within a
 			// certain distance of each other
 			AttractionNode bestAttracted = null;
-			for (Vector v : attractors) {
+			for (Vector3D v : attractors) {
 				Iterator<Node> ndIterator = new FilteredIterator<Node>(
 						new NodeIterator(rootNode), new Filter<Node>() {
 							@Override
@@ -188,8 +189,8 @@ public class SpaceColonizer implements WorldProvider {
 			// Now that we have the best ones average the nodes close to that
 			// distance away
 			if (bestAttracted != null) {
-				Vector accum = new Vector(0, 0, 0);
-				for (Vector v : attractors) {
+				Vector3D accum = new Vector3D(0, 0, 0);
+				for (Vector3D v : attractors) {
 					AttractionNode attractionInformation = AttractionNode
 							.computeAttractionOf(bestAttracted.getAttracted(),
 									v, null, 0, 0);
@@ -218,14 +219,14 @@ public class SpaceColonizer implements WorldProvider {
 
 		// First step is to inspect every attraction vector and find the closest
 		// node.
-		Map<Node, Vector> attractions = generateAttractionVectors();
+		Map<Node, Vector3D> attractions = generateAttractionVectors();
 
 		// Add the new nodes
 		long startTime = System.nanoTime();
-		Set<Entry<Node, Vector>> dirSet = attractions.entrySet();
+		Set<Entry<Node, Vector3D>> dirSet = attractions.entrySet();
 		int nodesAdded = 0;
 		final List<Node> newNodes = new ArrayList<Node>(dirSet.size());
-		for (Entry<Node, Vector> dirSpec : dirSet) {
+		for (Entry<Node, Vector3D> dirSpec : dirSet) {
 			dirSpec.getValue().normalize().multiply(Configuration.INODE_LENGTH);
 			Node nd = new Node(dirSpec.getKey().getPosition().clone()
 					.add(dirSpec.getValue()), this);
@@ -259,7 +260,7 @@ public class SpaceColonizer implements WorldProvider {
 			Node node = nodes.next();
 			if (node.getParent() != null) {
 				float initRadius = node.getParent().getRadius();
-				Vector startDirection = null;
+				Vector3D startDirection = null;
 				if (node.getParent().getCrossSection() - node.getCrossSection() > Configuration.ACCUM_CROSS_SECTION * 10) {
 					// Joining with a big branch...
 					initRadius = node.getRadius();
@@ -283,7 +284,7 @@ public class SpaceColonizer implements WorldProvider {
 					color = Color.blue;
 					break;
 				case LEAF:
-					color = Color.green;
+					color = new Color(0f, 1f, 0f, 0.5f);
 					break;
 				case NEW_BRANCH:
 					color = new Color(139, 69, 19);
@@ -296,8 +297,43 @@ public class SpaceColonizer implements WorldProvider {
 				}
 				if (node.getBudState() == BudState.LEAF) {
 					vertexObjects.add(new LeafVertexObject(10, node.getParent()
-							.getPosition(), startDirection, color));
+							.getPosition(), startDirection, color, 1f));
 				} else {
+					Vector3D leafDIR = Vector3D
+							.crossProduct(
+									startDirection,
+									node.getPosition()
+											.clone()
+											.subtract(
+													node.getDirection()
+															.clone()
+															.normalize()
+															.add(new Vector3D(
+																	(float) Math
+																			.random() * 3f - 1.5f,
+																	(float) Math
+																			.random() * 3f - 1.5f,
+																	(float) Math
+																			.random() * 3f - 1.5f)))
+											.normalize());
+					if (Math.random() < .5f) {
+						leafDIR.x *= -1;
+						leafDIR.z *= -1;
+					}
+					if (Math.random() < .75 && node.getCrossSection() < 10) {
+						vertexObjects.add(new LeafVertexObject(10,
+								node.getPosition()
+										.clone()
+										.add(leafDIR.clone().multiply(
+												node.getRadius())), leafDIR,
+								new Color(0f, 1f, 0f, 0.5f), .5f));
+					}
+					if (Math.random() < .5 && node.getCrossSection() < 5) {
+						vertexObjects.add(new LeafVertexObject(10, node
+								.getPosition(), Vector3D.crossProduct(leafDIR,
+								new Vector3D(1f, 1f, 1f)).normalize(),
+								new Color(0f, 1f, 0f, 0.5f), .4f));
+					}
 					vertexObjects.add(new CylinderVertexObject(initRadius, node
 							.getRadius(), 10, node.getParent().getPosition(),
 							startDirection, node.getPosition(), color));
@@ -313,7 +349,7 @@ public class SpaceColonizer implements WorldProvider {
 		// Render attractors
 		GL11.glBegin(GL11.GL_POINTS);
 		GL11.glColor3f(1f, 0f, 0f);
-		for (Vector v : attractors) {
+		for (Vector3D v : attractors) {
 			GL11.glVertex3f(v.x, v.y, v.z);
 		}
 		GL11.glEnd();

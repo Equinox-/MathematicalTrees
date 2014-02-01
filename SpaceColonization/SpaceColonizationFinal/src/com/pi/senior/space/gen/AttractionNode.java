@@ -2,16 +2,16 @@ package com.pi.senior.space.gen;
 
 import java.util.Iterator;
 
-import com.pi.senior.math.Vector;
+import com.pi.senior.math.Vector3D;
 import com.pi.senior.space.tree.Node;
 
 public class AttractionNode implements Comparable<AttractionNode> {
 	private Node attracted;
 	private double distance;
 	private double rawDistance;
-	private Vector growthDirection;
+	private Vector3D growthDirection;
 
-	public AttractionNode(Node attracted, Vector growthDirection,
+	public AttractionNode(Node attracted, Vector3D growthDirection,
 			double distance, double rawDistance) {
 		this.attracted = attracted;
 		this.growthDirection = growthDirection;
@@ -31,21 +31,21 @@ public class AttractionNode implements Comparable<AttractionNode> {
 		return rawDistance;
 	}
 
-	public Vector getGrowthDirection() {
+	public Vector3D getGrowthDirection() {
 		return growthDirection;
 	}
 
-	public static AttractionNode computeAttractionOf(Node nd, Vector attractor,
-			Vector idealDirection, float divergenceWeight, float tropismWeight) {
+	public static AttractionNode computeAttractionOf(Node nd, Vector3D attractor,
+			Vector3D idealDirection, float divergenceWeight, float tropismWeight) {
 		double distRaw = nd.getPosition().distSquared(attractor);
 		double dist2 = distRaw;
-		Vector testDirection = attractor.clone().subtract(nd.getPosition())
+		Vector3D testDirection = attractor.clone().subtract(nd.getPosition())
 				.normalize();
 		if (divergenceWeight > 0 && idealDirection != null) {
 			// Compare the current branch direction with the direction
 			// this branch will cause.
 			if (nd.getDirection() != null) {
-				double angleOfChange = Math.abs(Math.acos(Vector.dotProduct(
+				double angleOfChange = Math.abs(Math.acos(Vector3D.dotProduct(
 						testDirection, nd.getDirection())));
 				dist2 += angleOfChange * divergenceWeight;
 			}
@@ -55,7 +55,7 @@ public class AttractionNode implements Comparable<AttractionNode> {
 			// A second bias is to compare to the root of the tree. In
 			// general branches should extend away from the root of the
 			// tree on the XZ plane. AKA tropism
-			double angleOfChange = Math.abs(Math.acos(Vector.dotProduct(
+			double angleOfChange = Math.abs(Math.acos(Vector3D.dotProduct(
 					idealDirection, testDirection)));
 			dist2 += angleOfChange * tropismWeight;
 		}
@@ -63,7 +63,7 @@ public class AttractionNode implements Comparable<AttractionNode> {
 	}
 
 	public static AttractionNode computeBestNodeFor(Iterator<Node> ndIterator,
-			Vector attractor, Vector idealDirection,
+			Vector3D attractor, Vector3D idealDirection,
 			float maxAttractionDistance, float divergenceWeight,
 			float tropismWeight) {
 		AttractionNode bestNode = null;

@@ -10,7 +10,7 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 
-import com.pi.senior.math.Vector;
+import com.pi.senior.math.Vector3D;
 import com.pi.senior.space.AnaglyphConfigurator;
 import com.pi.senior.space.Configuration;
 import com.pi.senior.space.gen.SpaceColonizer;
@@ -26,7 +26,7 @@ public class ViewerProgram {
 	private StereoCamera cam;
 
 	public ViewerProgram() {
-		colonizer = new SpaceColonizer(new Vector(0, 0, 0),
+		colonizer = new SpaceColonizer(new Vector3D(0, 0, 0),
 				Configuration.createEnvelope());
 		colonizer.generateAttractors();
 

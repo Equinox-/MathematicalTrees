@@ -19,7 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.pi.senior.math.Vector;
+import com.pi.senior.math.Vector3D;
 
 public class CharacterRenderer {
 	public static final int MARGINS = 25;
@@ -34,8 +34,8 @@ public class CharacterRenderer {
 														// pixel
 	private static final float ATTRACTORS_ANOTHER_CHUNK = 5;
 
-	private List<Vector> nodes = new ArrayList<Vector>();
-	private List<Vector> attractionVectors = new ArrayList<Vector>();
+	private List<Vector3D> nodes = new ArrayList<Vector3D>();
+	private List<Vector3D> attractionVectors = new ArrayList<Vector3D>();
 
 	private List<Leaf> leaves = new ArrayList<Leaf>();
 
@@ -181,7 +181,7 @@ public class CharacterRenderer {
 			float x = (float) ((Math.random() * characterBounds.getWidth()));
 			float y = (float) ((Math.random() * characterBounds.getHeight()));
 			if (isInEnvelope(x, y)) {
-				attractionVectors.add(new Vector(x, y));
+				attractionVectors.add(new Vector3D(x, y, 0));
 				i++;
 			}
 		}
@@ -189,13 +189,13 @@ public class CharacterRenderer {
 
 	private void genImageStarters() {
 		for (int x = 0; x < mask.getWidth(); x += mask.getWidth() / 4) {
-			nodes.add(new Vector(x, 0, 0));
+			nodes.add(new Vector3D(x, 0, 0));
 			nodeHeads++;
 		}
-		Iterator<Vector> vItr = attractionVectors.iterator();
+		Iterator<Vector3D> vItr = attractionVectors.iterator();
 		while (vItr.hasNext()) {
-			Vector vTest = vItr.next();
-			for (Vector v2 : nodes) {
+			Vector3D vTest = vItr.next();
+			for (Vector3D v2 : nodes) {
 				if (v2.dist(vTest) < ATTRACTOR_TOLERANCE) {
 					vItr.remove();
 					break;
@@ -207,10 +207,10 @@ public class CharacterRenderer {
 	private void genCharacterStarters() {
 		nodeHeads = 0;
 		double bestY = Double.MIN_VALUE;
-		Vector bestV = null;
-		major: for (Vector v : attractionVectors) {
+		Vector3D bestV = null;
+		major: for (Vector3D v : attractionVectors) {
 			if (v.y > bestY) {
-				for (Vector v2 : nodes) {
+				for (Vector3D v2 : nodes) {
 					if (v2.dist(v) < ENTRY_ATTRACTOR_TOLERANCE) {
 						continue major;
 					}
@@ -223,10 +223,10 @@ public class CharacterRenderer {
 			nodes.add(bestV);
 			nodeHeads++;
 
-			Iterator<Vector> vItr = attractionVectors.iterator();
+			Iterator<Vector3D> vItr = attractionVectors.iterator();
 			while (vItr.hasNext()) {
-				Vector vTest = vItr.next();
-				for (Vector v : nodes) {
+				Vector3D vTest = vItr.next();
+				for (Vector3D v : nodes) {
 					if (v.dist(vTest) < ATTRACTOR_TOLERANCE) {
 						vItr.remove();
 						break;
@@ -238,10 +238,10 @@ public class CharacterRenderer {
 		}
 
 		for (int i = 0; i < 10; i++) {
-			Vector vv = null;
-			major: for (Vector v : attractionVectors) {
+			Vector3D vv = null;
+			major: for (Vector3D v : attractionVectors) {
 				if (v.y > bestY - (ATTRACTOR_TOLERANCE / 2)) {
-					for (Vector v2 : nodes) {
+					for (Vector3D v2 : nodes) {
 						if (v2.dist(v) < ENTRY_ATTRACTOR_TOLERANCE) {
 							continue major;
 						}
@@ -256,10 +256,10 @@ public class CharacterRenderer {
 			nodes.add(vv);
 			nodeHeads++;
 
-			Iterator<Vector> vItr = attractionVectors.iterator();
+			Iterator<Vector3D> vItr = attractionVectors.iterator();
 			while (vItr.hasNext()) {
-				Vector vTest = vItr.next();
-				for (Vector v2 : nodes) {
+				Vector3D vTest = vItr.next();
+				for (Vector3D v2 : nodes) {
 					if (v2.dist(vTest) < ATTRACTOR_TOLERANCE) {
 						vItr.remove();
 						break;
@@ -276,20 +276,20 @@ public class CharacterRenderer {
 				|| characterBounds.getHeight() <= 0.0) {
 			return;
 		}
-		final HashMap<Vector, Vector> movementNodes = new HashMap<Vector, Vector>(
+		final HashMap<Vector3D, Vector3D> movementNodes = new HashMap<Vector3D, Vector3D>(
 				Math.max(nodes.size() - (nodeHeads * 3), 10));
 		Stack<Future<?>> futures = new Stack<Future<?>>();
-		for (final Vector v : attractionVectors) {
+		for (final Vector3D v : attractionVectors) {
 			Runnable runner = new Runnable() {
 				public void run() {
 					double bestDist = Double.MAX_VALUE;
-					Vector bestVector = null;
+					Vector3D bestVector = null;
 					for (int i = nodes.size() - 1; i >= Math.max(nodes.size()
 							- nodeHeads * 3, 0); i--) {
-						Vector vTest = nodes.get(i);
+						Vector3D vTest = nodes.get(i);
 						double testDist = v.dist(vTest);
 						if (testDist < bestDist) {
-							Vector movePlace = vTest.clone().add(
+							Vector3D movePlace = vTest.clone().add(
 									v.clone().subtract(vTest).normalize());
 							if (isInEnvelope(movePlace.x, movePlace.y)) {
 								bestVector = vTest;
@@ -299,7 +299,7 @@ public class CharacterRenderer {
 					}
 					if (bestVector != null && bestDist < NODE_VIEWPORT) {
 						synchronized (movementNodes) {
-							Vector move = movementNodes.get(bestVector);
+							Vector3D move = movementNodes.get(bestVector);
 							if (move == null) {
 								move = v.clone().subtract(bestVector);
 								movementNodes.put(bestVector, move);
@@ -326,15 +326,15 @@ public class CharacterRenderer {
 
 		int oldHeads = nodeHeads;
 		nodeHeads = 0;
-		for (Entry<Vector, Vector> entry : movementNodes.entrySet()) {
-			Vector nVector = entry.getKey().clone()
+		for (Entry<Vector3D, Vector3D> entry : movementNodes.entrySet()) {
+			Vector3D nVector = entry.getKey().clone()
 					.add(entry.getValue().normalize().multiply(NODE_SIZE));
 			// Check for intersections...
 			boolean intersects = false;
 
 			for (int i = nodes.size() - 1; i >= Math.max(nodes.size()
 					- oldHeads * 3, 0); i--) {
-				Vector vTest = nodes.get(i);
+				Vector3D vTest = nodes.get(i);
 				if (nVector.dist(vTest) < NODE_SIZE - FLOATING_POINT_MATH) {
 					intersects = true;
 					break;
@@ -349,14 +349,14 @@ public class CharacterRenderer {
 			}
 		}
 
-		Stack<Future<Vector>> killFuture = new Stack<Future<Vector>>();
-		for (final Vector vTest : attractionVectors) {
-			Callable<Vector> runner = new Callable<Vector>() {
+		Stack<Future<Vector3D>> killFuture = new Stack<Future<Vector3D>>();
+		for (final Vector3D vTest : attractionVectors) {
+			Callable<Vector3D> runner = new Callable<Vector3D>() {
 				@Override
-				public Vector call() throws Exception {
+				public Vector3D call() throws Exception {
 					for (int i = nodes.size() - 1; i >= Math.max(0,
 							nodes.size() - nodeHeads * 2); i--) {
-						Vector v = nodes.get(i);
+						Vector3D v = nodes.get(i);
 						if (v.dist(vTest) < ATTRACTOR_TOLERANCE) {
 							return vTest;
 						}
@@ -367,7 +367,7 @@ public class CharacterRenderer {
 			if (threadPool != null) {
 				killFuture.add(threadPool.submit(runner));
 			} else {
-				Vector v;
+				Vector3D v;
 				try {
 					v = runner.call();
 					if (v != null) {
@@ -379,7 +379,7 @@ public class CharacterRenderer {
 		}
 		while (!killFuture.empty()) {
 			try {
-				Vector v = killFuture.pop().get(1000, TimeUnit.SECONDS);
+				Vector3D v = killFuture.pop().get(1000, TimeUnit.SECONDS);
 				if (v != null) {
 					attractionVectors.remove(v);
 				}
@@ -414,13 +414,13 @@ public class CharacterRenderer {
 
 		// Attractors
 		g.setColor(Color.BLUE);
-		for (Vector v : attractionVectors) {
+		for (Vector3D v : attractionVectors) {
 			g.fillOval((int) (v.x - 3), (int) (v.y - 3), 6, 6);
 		}
 
 		// Nodes
 		g.setColor(new Color(128, 101, 23));
-		for (Vector v : nodes) {
+		for (Vector3D v : nodes) {
 			g.drawOval((int) (v.x - (NODE_SIZE / 2)),
 					(int) (v.y - (NODE_SIZE / 2)), (int) NODE_SIZE,
 					(int) NODE_SIZE);
@@ -440,7 +440,7 @@ public class CharacterRenderer {
 
 		// Nodes
 		g.setColor(new Color(128, 101, 23, c == '\0' ? 100 : 255));
-		for (Vector v : nodes) {
+		for (Vector3D v : nodes) {
 			g.drawOval((int) (v.x - (NODE_SIZE / 2)),
 					(int) (v.y - (NODE_SIZE / 2)), (int) NODE_SIZE,
 					(int) NODE_SIZE);

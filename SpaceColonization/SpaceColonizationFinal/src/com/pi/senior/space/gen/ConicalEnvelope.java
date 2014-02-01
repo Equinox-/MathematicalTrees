@@ -2,21 +2,21 @@ package com.pi.senior.space.gen;
 
 import java.util.Random;
 
-import com.pi.senior.math.Vector;
+import com.pi.senior.math.Vector3D;
 
 public class ConicalEnvelope implements Envelope {
 	public enum PopulationSchema {
 		FILL, UMBRELLA;
 	}
 
-	private Vector bottom;
-	private Vector size;
+	private Vector3D bottom;
+	private Vector3D size;
 	private PopulationSchema populationSchema;
 	
 	private float randomShellVariance = 0.25f;
 	private float randomDistributionVariance = 0.5f;
 
-	public ConicalEnvelope(Vector bottom, Vector size,
+	public ConicalEnvelope(Vector3D bottom, Vector3D size,
 			PopulationSchema populationSchema) {
 		this.size = size;
 		this.bottom = bottom;
@@ -30,7 +30,7 @@ public class ConicalEnvelope implements Envelope {
 	}
 
 	@Override
-	public boolean contains(Vector v, Random rand) {
+	public boolean contains(Vector3D v, Random rand) {
 		float dy = (v.y - bottom.y) / size.y;
 		float dx = (v.x - bottom.x) / (size.x * (1 - dy));
 		float dz = (v.z - bottom.z) / (size.z * (1 - dy));
@@ -48,13 +48,13 @@ public class ConicalEnvelope implements Envelope {
 	}
 
 	@Override
-	public Vector nextRandom(Random rand) {
-		Vector v;
+	public Vector3D nextRandom(Random rand) {
+		Vector3D v;
 		do {
 			float xRand = (rand.nextFloat() * 2f) - 1f;
 			float yRand = rand.nextFloat();
 			float zRand = (rand.nextFloat() * 2f) - 1f;
-			v = new Vector(bottom.x + (xRand * (1 - yRand) * size.x), bottom.y
+			v = new Vector3D(bottom.x + (xRand * (1 - yRand) * size.x), bottom.y
 					+ (yRand * size.y), bottom.z
 					+ (zRand * (1 - yRand) * size.z));
 		} while (!contains(v, rand));

@@ -7,7 +7,7 @@ import java.nio.FloatBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
-import com.pi.senior.math.Vector;
+import com.pi.senior.math.Vector3D;
 
 public class CylinderVertexObject implements Renderable {
 	private ByteBuffer indexBuffer;
@@ -16,17 +16,17 @@ public class CylinderVertexObject implements Renderable {
 	private FloatBuffer normalBuffer;
 
 	public CylinderVertexObject(float radStart, float radEnd, int slices,
-			Vector start, Vector startDirection, Vector end, Color color) {
-		Vector change = end.clone().subtract(start).normalize();
-		Vector rEnd = Vector.crossProduct(change,
-				new Vector(0.577350269f, -0.577350269f, 0.577350269f))
+			Vector3D start, Vector3D startDirection, Vector3D end, Color color) {
+		Vector3D change = end.clone().subtract(start).normalize();
+		Vector3D rEnd = Vector3D.crossProduct(change,
+				new Vector3D(0.577350269f, -0.577350269f, 0.577350269f))
 				.normalize();
-		Vector sEnd = Vector.crossProduct(change, rEnd).normalize();
+		Vector3D sEnd = Vector3D.crossProduct(change, rEnd).normalize();
 
-		Vector rStart = Vector.crossProduct(startDirection,
-				new Vector(0.577350269f, -0.577350269f, 0.577350269f))
+		Vector3D rStart = Vector3D.crossProduct(startDirection,
+				new Vector3D(0.577350269f, -0.577350269f, 0.577350269f))
 				.normalize();
-		Vector sStart = Vector.crossProduct(startDirection, rStart).normalize();
+		Vector3D sStart = Vector3D.crossProduct(startDirection, rStart).normalize();
 
 		vertexBuffer = BufferUtils.createFloatBuffer(slices * 2 * 3);
 		normalBuffer = BufferUtils.createFloatBuffer(slices * 2 * 3);

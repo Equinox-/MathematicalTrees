@@ -56,8 +56,9 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 		g.dispose();
 
 		for (int i = 0; i < 100; i++) {
-			update(100);
-			paint(g);
+			update(50);
+			//paint(g);
+			repaint();
 		}
 		addMouseListener(this);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -111,6 +112,7 @@ public class SpaceTechDemo2D extends JFrame implements MouseListener {
 	public void paint(Graphics g) {
 		g.clearRect(0, 0, getWidth(), getHeight());
 		Graphics2D gg = ((Graphics2D) g);
+		gg.scale(.5, .5);
 		renderText(gg);
 	}
 
