@@ -14,7 +14,7 @@ public class Node {
 	private Vector3D position;
 	private Vector3D direction; // Cached for better performance
 	private float crossSection = Configuration.TIP_CROSS_SECTION;
-	private BudState budState = BudState.BUD;
+	private BudState budState = BudState.NEW_BRANCH;
 	private long budStateBegin;
 
 	private WorldProvider worldProvider;

@@ -16,7 +16,8 @@ public class EllipsoidEnvelope implements Envelope {
 	private float randomShellVariance = 0.25f;
 	private float randomDistributionVariance = 0.5f;
 
-	public EllipsoidEnvelope setRandomParameters(float shellVariance, float distVariance) {
+	public EllipsoidEnvelope setRandomParameters(float shellVariance,
+			float distVariance) {
 		this.randomShellVariance = shellVariance;
 		this.randomDistributionVariance = distVariance;
 		return this;
@@ -59,8 +60,10 @@ public class EllipsoidEnvelope implements Envelope {
 			float xRand = (rand.nextFloat() * 2f) - 1f;
 			float yRand = (rand.nextFloat() * 2f) - 1f;
 			float zRand = (rand.nextFloat() * 2f) - 1f;
-			v = new Vector3D(center.x + (xRand * size.x), center.y
-					+ (yRand * size.y), center.z + (zRand * size.z));
+			v = new Vector3D(center.x
+					+ (xRand * (size.x + randomShellVariance)), center.y
+					+ (yRand * (size.y + randomShellVariance)), center.z
+					+ (zRand * (size.z + randomShellVariance)));
 		} while (!contains(v, rand));
 		return v;
 	}

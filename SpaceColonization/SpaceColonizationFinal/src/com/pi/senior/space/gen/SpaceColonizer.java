@@ -230,10 +230,14 @@ public class SpaceColonizer implements WorldProvider {
 			dirSpec.getValue().normalize().multiply(Configuration.INODE_LENGTH);
 			Node nd = new Node(dirSpec.getKey().getPosition().clone()
 					.add(dirSpec.getValue()), this);
-			if (dirSpec.getKey().addChild(nd)) {
-				newNodes.add(nd);
-				++nodeCount;
-				++nodesAdded;
+			if (!(populationArea instanceof TextualEllipsoidEnvelope)
+					|| nd.getPosition().y < Configuration.envelopeBaseY
+					|| populationArea.contains(nd.getPosition(), new Random())) {
+				if (dirSpec.getKey().addChild(nd)) {
+					newNodes.add(nd);
+					++nodeCount;
+					++nodesAdded;
+				}
 			}
 		}
 		System.out.println("Added " + nodesAdded + " new nodes in "
@@ -261,7 +265,10 @@ public class SpaceColonizer implements WorldProvider {
 			if (node.getParent() != null) {
 				float initRadius = node.getParent().getRadius();
 				Vector3D startDirection = null;
-				if (node.getParent().getCrossSection() - node.getCrossSection() > Configuration.ACCUM_CROSS_SECTION * 10) {
+				float divergence = (float) Math.acos(Vector3D.dotProduct(node
+						.getParent().getDirection().clone().normalize(), node
+						.getDirection().clone().normalize()));
+				if (divergence > 1.0 ){//node.getParent().getCrossSection() - node.getCrossSection() > Configuration.ACCUM_CROSS_SECTION * 10) {
 					// Joining with a big branch...
 					initRadius = node.getRadius();
 				} else if (node.getParent().getParent() != null) {

@@ -125,7 +125,10 @@ public class CharacterRenderer {
 							* lastTmp.getWidth() + spacingBase : 0)),
 					(int) -tmp.getY());
 			characterBounds.setRect(0, 0,
-					characterBounds.getWidth() + tmp.getWidth() - spacing,
+					characterBounds.getWidth()
+							+ tmp.getWidth()
+							- (i > 0 ? spacing * lastTmp.getWidth()
+									+ spacingBase : 0),
 					Math.max(tmp.getHeight(), characterBounds.getHeight()));
 			lastTmp = tmp;
 		}

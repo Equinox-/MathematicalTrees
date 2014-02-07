@@ -1,6 +1,8 @@
 package com.pi.senior.budfate.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import com.pi.senior.budfate.api.BudEvolutionScheme;
@@ -43,6 +45,14 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 			return;
 		}
 
+		// Clean projections
+		Iterator<Vector3D> itr = projectedValues.iterator();
+		while (itr.hasNext()) {
+			if (itr.next().mag2() <= 0) {
+				itr.remove();
+			}
+		}
+
 		// Flattened theoretical bud
 		Vector3D theoryBud = null;
 		if (projectedValues.size() == 1 && projectedValues.get(0).mag2() > 0) {
@@ -52,12 +62,13 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 			theoryBud = new Vector3D((float) WorldProvider.nextRandom(),
 					(float) WorldProvider.nextRandom(), 0);
 		} else {
-			theoryBud = null; // TODO Multiple lateral buds?
+			theoryBud = null; // TODO Multiple lateral buds? OPTIMIZIFY
+			// Find the two spherically the furthest apart.
 		}
 
 		// Unproject theoretical bud
 		if (theoryBud != null) {
-			System.out.println("ADD LATERAL BUD");
+			System.out.println("ADD LATERAL BUD: " + theoryBud);
 			theoryBud.add(base.getNodeEnd());
 			base.addChild(new PositionedMetamer(MetamerType.LATERAL, base,
 					new Vector3D(0, 0, 0), theoryBud.normalize(), true));

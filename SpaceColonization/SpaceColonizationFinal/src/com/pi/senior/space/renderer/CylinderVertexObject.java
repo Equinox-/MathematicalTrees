@@ -23,10 +23,10 @@ public class CylinderVertexObject implements Renderable {
 				.normalize();
 		Vector3D sEnd = Vector3D.crossProduct(change, rEnd).normalize();
 
-		Vector3D rStart = Vector3D.crossProduct(startDirection,
-				new Vector3D(0.577350269f, -0.577350269f, 0.577350269f))
+		Vector3D rStart = Vector3D.crossProduct(sEnd, startDirection)
 				.normalize();
-		Vector3D sStart = Vector3D.crossProduct(startDirection, rStart).normalize();
+		Vector3D sStart = Vector3D.crossProduct(startDirection, rStart)
+				.normalize();
 
 		vertexBuffer = BufferUtils.createFloatBuffer(slices * 2 * 3);
 		normalBuffer = BufferUtils.createFloatBuffer(slices * 2 * 3);

@@ -27,10 +27,12 @@ public class ImageTechDemo2D extends JFrame implements MouseListener {
 		Graphics g2 = getGraphics();
 		FontChooser chooser = new FontChooser(this);
 		chooser.show();
-		Font f = chooser.getSelectedFont();//new Font(JOptionPane.showInputDialog(this, ), Font.PLAIN, 200);
-		g2.setFont(f.deriveFont(500f));
+		Font f = chooser.getSelectedFont();// new
+											// Font(JOptionPane.showInputDialog(this,
+											// ), Font.PLAIN, 200);
+		g2.setFont(f.deriveFont(250f));
 		imageRenderer = new CharacterRenderer(JOptionPane.showInputDialog(this,
-				"What do you want to say?"), g2, -0.075f, 125f);// ImageIO.read(image));
+				"What do you want to say?"), g2, .25f, 10f);// ImageIO.read(image));
 
 		// update(1000);
 		repaint();
@@ -45,7 +47,8 @@ public class ImageTechDemo2D extends JFrame implements MouseListener {
 			renderText(gg);
 		}
 		imageRenderer.cleanPaint();
-		ImageIO.write(imageRenderer.getOutput(), "PNG", new File("majorOutput.png"));
+		ImageIO.write(imageRenderer.getOutput(), "PNG", new File(
+				"majorOutput.png"));
 		try {
 			Desktop.getDesktop().open(new File("majorOutput.png"));
 		} catch (Exception e) {
