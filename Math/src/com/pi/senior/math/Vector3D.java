@@ -117,6 +117,16 @@ public class Vector3D {
 						Vector3D.dotProduct(vector, planeNormal)));
 	}
 
+	/**
+	 * Spherical linear interpolation from a to b, at time t in [0, 1]
+	 */
+	public static Vector3D slerp(Vector3D a, Vector3D b, float t) {
+		float angle = (float) Math.acos(dotProduct(a.clone(), b.clone()));
+		float weightA = (float) (Math.sin((1 - t) * angle) / Math.sin(angle));
+		float weightB = (float) (Math.sin(t * angle) / Math.sin(angle));
+		return a.clone().multiply(weightA).add(b.clone().multiply(weightB));
+	}
+
 	public Vector3D reverse() {
 		x = -x;
 		y = -y;

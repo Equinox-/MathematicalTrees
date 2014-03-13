@@ -24,9 +24,15 @@ public class PositionedMetamer {
 	private Vector3D metamerStart = new Vector3D();
 	private Vector3D metamerEnd = new Vector3D();
 	private TransMatrix localToWorld = new TransMatrix();
+	
+	private int depth = 0;
 
 	public PositionedMetamer(MetamerType type, Vector3D pos) {
 		this(type, new Vector3D(), pos);
+	}
+	
+	public int getDepth() {
+		return depth;
 	}
 
 	public PositionedMetamer(MetamerType type, Vector3D base, Vector3D pos) {
@@ -56,6 +62,7 @@ public class PositionedMetamer {
 						.subtract(new Vector3D(0, 0, parent.length))));
 		this.parent = parent;
 		this.parent.children.add(this);
+		this.depth = parent.depth + 1;
 		calculate();
 	}
 	
@@ -107,6 +114,10 @@ public class PositionedMetamer {
 
 	public Vector3D getNodeEnd() {
 		return metamerEnd;
+	}
+	
+	public Vector3D getDirection() {
+		return metamerEnd.clone().subtract(metamerStart);
 	}
 
 	public TransMatrix getLocalToWorld() {
