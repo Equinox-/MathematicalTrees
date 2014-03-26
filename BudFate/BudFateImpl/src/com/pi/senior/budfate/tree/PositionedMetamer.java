@@ -61,7 +61,7 @@ public class PositionedMetamer {
 						.multiply(pos)
 						.subtract(new Vector3D(0, 0, parent.length))));
 		this.parent = parent;
-		this.parent.children.add(this);
+		//this.parent.children.add(this); TODO Strange error brah
 		this.depth = parent.depth + 1;
 		calculate();
 	}

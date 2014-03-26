@@ -62,7 +62,7 @@ public class Configuration {
 	public static float INODE_LENGTH = 0.5f;
 	public static float IDEAL_BRANCH_SLOPE = 0.5f;
 
-	public static float RADI_PER_CROSS_SECTION = 0.035f;
+	public static float RADI_PER_CROSS_SECTION = 0.035f * 3.0f;
 	public static float TIP_CROSS_SECTION = 1f;
 	public static float ACCUM_CROSS_SECTION = 0.1f;
 	public static float NODE_CHILD_TOLERANCE = 0.1f;

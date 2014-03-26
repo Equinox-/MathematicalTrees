@@ -145,6 +145,11 @@ public class TreeDisplay {
 							return Float.compare(arg0.getKey(), arg1.getKey());
 						}
 					});
+			System.out.println("Available nutrition: " + availableNutrition);
+			System.out.println("Requires nutrition: ");
+			for (Entry<Float, PositionedMetamer> mm : possibleSteps) {
+				System.out.println(mm.getKey());
+			}
 			for (int i = 0; i < possibleSteps.size() && availableNutrition > 0; i++) {
 				if (availableNutrition > possibleSteps.get(i).getKey()) {
 					possibleSteps.get(i).getValue().getParent()

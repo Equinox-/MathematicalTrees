@@ -11,6 +11,8 @@ import com.pi.senior.math.Vector3D;
 import com.pi.senior.world.WorldProvider;
 
 public class SimplexBudEvolution implements BudEvolutionScheme {
+	private Vector3D UP_VECTOR = new Vector3D(0, 0, 1);
+
 	@Override
 	public PositionedMetamer getNextMetamer(PositionedMetamer base) {
 		// The idea behind this algorithm is to place the lateral buds so they
@@ -42,12 +44,13 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 		}
 		if (!foundTerminalBud) {
 			// Add a terminal bud if one doesn't exist
+			Vector3D dir = base.getDirection().normalize();
+			if (!dir.equals(UP_VECTOR)) {
+				//dir = Vector3D.slerp(dir, UP_VECTOR, 0.1f);
+			}
 			return new PositionedMetamer(MetamerType.TERMINAL, base, base
-					.getNodeEnd().clone(), base
-					.getNodeEnd()
-					.clone()
-					.add(Vector3D.slerp(base.getDirection(), new Vector3D(0, 1,
-							0), 0.1f)), false);
+					.getNodeEnd().clone(), base.getNodeEnd().clone().add(dir),
+					false);
 		}
 
 		// Clean projections
@@ -177,17 +180,20 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 		float divergence = (float) Math
 				.abs(Math.acos(Vector3D.dotProduct(base.getDirection()
 						.normalize(), child.getDirection().normalize())));
-		float minSeparation = (float) (Math.PI / 2.0f);
+		float minSeparation = (float) (Math.PI);
 		for (PositionedMetamer s : base.getChildren()) {
 			float angle = (float) Math.abs(Math.acos(Vector3D.dotProduct(s
 					.getDirection().normalize(), child.getDirection()
 					.normalize())));
+			if (s == child) {
+				return Float.MAX_VALUE; // Already exists
+			}
 			if (angle < minSeparation) {
 				minSeparation = angle;
 			}
 		}
 		return (float) (divergence
 				+ (base.getChildren().size() / minSeparation) + (base
-				.getDepth() / 10.0));
+				.getDepth() * base.getDepth() / 2.0));
 	}
 }
