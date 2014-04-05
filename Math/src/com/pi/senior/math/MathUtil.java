@@ -23,4 +23,16 @@ public class MathUtil {
 			return new float[] { thickness, baseLen, thickness };
 		}
 	}
+
+	public static float getMinDistanceBetweenLines(Vector3D[] lineA,
+			Vector3D[] lineB) {
+		Vector3D dirA = lineA[1].clone().subtract(lineA[0]).normalize();
+		Vector3D dirB = lineB[1].clone().subtract(lineB[0]).normalize();
+		Vector3D normal = Vector3D.crossProduct(dirA, dirB).normalize();
+
+		float dA = -Vector3D.dotProduct(normal, lineA[0]);
+		float dB = -Vector3D.dotProduct(normal, lineB[0]);
+
+		return Math.abs(dA - dB);
+	}
 }

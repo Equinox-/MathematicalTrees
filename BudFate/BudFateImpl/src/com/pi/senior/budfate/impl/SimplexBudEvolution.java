@@ -46,7 +46,7 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 			// Add a terminal bud if one doesn't exist
 			Vector3D dir = base.getDirection().normalize();
 			if (!dir.equals(UP_VECTOR)) {
-				//dir = Vector3D.slerp(dir, UP_VECTOR, 0.1f);
+				// dir = Vector3D.slerp(dir, UP_VECTOR, 0.1f);
 			}
 			return new PositionedMetamer(MetamerType.TERMINAL, base, base
 					.getNodeEnd().clone(), base.getNodeEnd().clone().add(dir),

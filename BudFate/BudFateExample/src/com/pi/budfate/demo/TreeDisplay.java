@@ -118,7 +118,7 @@ public class TreeDisplay {
 			off += 1;
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
-			availableNutrition += 5;
+			availableNutrition += 10;
 			System.out.println("EVOLVING");
 			List<PositionedMetamer> evolution = new ArrayList<PositionedMetamer>();
 			NodeIterator itr = new NodeIterator(tree.getRootMetamer());
@@ -133,11 +133,11 @@ public class TreeDisplay {
 					possibleSteps
 							.add(new AbstractMap.SimpleEntry<Float, PositionedMetamer>(
 									Float.valueOf(cost), mChild));
+					mChild.calculate();
 				}
 			}
 			Collections.sort(possibleSteps,
 					new Comparator<Entry<Float, PositionedMetamer>>() {
-
 						@Override
 						public int compare(
 								Entry<Float, PositionedMetamer> arg0,
@@ -146,15 +146,22 @@ public class TreeDisplay {
 						}
 					});
 			System.out.println("Available nutrition: " + availableNutrition);
-			System.out.println("Requires nutrition: ");
-			for (Entry<Float, PositionedMetamer> mm : possibleSteps) {
-				System.out.println(mm.getKey());
-			}
 			for (int i = 0; i < possibleSteps.size() && availableNutrition > 0; i++) {
 				if (availableNutrition > possibleSteps.get(i).getKey()) {
-					possibleSteps.get(i).getValue().getParent()
-							.addChild(possibleSteps.get(i).getValue());
-					availableNutrition -= possibleSteps.get(i).getKey();
+					boolean clear = true;
+					for (PositionedMetamer mm : evolution) {
+						if (possibleSteps.get(i).getValue().getParent() != mm
+								&& mm.intersects(possibleSteps.get(i)
+										.getValue())) {
+							clear = false;
+							break;
+						}
+					}
+					if (clear) {
+						possibleSteps.get(i).getValue().getParent()
+								.addChild(possibleSteps.get(i).getValue());
+						availableNutrition -= possibleSteps.get(i).getKey();
+					}
 				}
 			}
 
