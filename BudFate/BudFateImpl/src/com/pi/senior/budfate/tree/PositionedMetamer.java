@@ -69,6 +69,10 @@ public class PositionedMetamer {
 	public PositionedMetamer getParent() {
 		return parent;
 	}
+	
+	public float getLength() {
+		return length;
+	}
 
 	public void addChild(PositionedMetamer b) {
 		if (b.parent != this && b.parent != null) {

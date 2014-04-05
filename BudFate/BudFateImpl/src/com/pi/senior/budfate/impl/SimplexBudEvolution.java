@@ -27,9 +27,9 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 
 		projectedValues.add(Vector3D.projectOntoPlane(planeNormal,
 				new Vector3D(0, 0, -1)));
-		projectedValues
-				.add(Vector3D.projectOntoPlane(planeNormal, new Vector3D(
-						(float) Math.random(), (float) Math.random(), -1)));
+//		projectedValues.add(Vector3D.projectOntoPlane(planeNormal,
+//				new Vector3D((float) WorldProvider.nextRandom(),
+//						(float) WorldProvider.nextRandom(), -1)));
 
 		for (int i = 0; i < base.getChildren().size(); i++) {
 			if (base.getChildren().get(i).getStateInfo().getBudType() == MetamerType.TERMINAL) {
@@ -46,7 +46,7 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 			// Add a terminal bud if one doesn't exist
 			Vector3D dir = base.getDirection().normalize();
 			if (!dir.equals(UP_VECTOR)) {
-				// dir = Vector3D.slerp(dir, UP_VECTOR, 0.1f);
+				dir = Vector3D.slerp(dir, UP_VECTOR, 0.1f);
 			}
 			return new PositionedMetamer(MetamerType.TERMINAL, base, base
 					.getNodeEnd().clone(), base.getNodeEnd().clone().add(dir),
@@ -169,6 +169,11 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 		// Unproject theoretical bud
 		if (theoryBud != null) {
 			theoryBud.add(base.getNodeEnd());
+			Vector3D idealVector = base.getLocalToWorld().inverse()
+					.multiply(UP_VECTOR.clone().add(base.getNodeEnd()))
+					.subtract(new Vector3D(0, 0, base.getLength()));
+			idealVector.normalize();
+			theoryBud.multiply(.9f).add(idealVector.multiply(.1f));
 			return new PositionedMetamer(MetamerType.LATERAL, base,
 					new Vector3D(0, 0, 0), theoryBud.normalize(), true);
 		}
@@ -180,6 +185,8 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 		float divergence = (float) Math
 				.abs(Math.acos(Vector3D.dotProduct(base.getDirection()
 						.normalize(), child.getDirection().normalize())));
+		float upwards = (float) Math.abs(Math.acos(Vector3D.dotProduct(
+				new Vector3D(0, 0, 1), child.getDirection().normalize())));
 		float minSeparation = (float) (Math.PI);
 		for (PositionedMetamer s : base.getChildren()) {
 			float angle = (float) Math.abs(Math.acos(Vector3D.dotProduct(s
@@ -192,7 +199,7 @@ public class SimplexBudEvolution implements BudEvolutionScheme {
 				minSeparation = angle;
 			}
 		}
-		return (float) (divergence
+		return (float) (divergence + (upwards * 5)
 				+ (base.getChildren().size() / minSeparation) + (base
 				.getDepth() * base.getDepth() / 2.0));
 	}

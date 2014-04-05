@@ -13,12 +13,6 @@ import static org.lwjgl.opengl.GL11.glLightf;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map.Entry;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
@@ -27,11 +21,8 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 
-import com.pi.senior.budfate.api.BudEvolutionScheme;
-import com.pi.senior.budfate.impl.SimplexBudEvolution;
 import com.pi.senior.budfate.tree.PositionedMetamer;
 import com.pi.senior.budfate.tree.Tree;
-import com.pi.senior.util.NodeIterator;
 
 public class TreeDisplay {
 	private static double horizontalTan = Math.tan(Math.toRadians(25));
@@ -48,14 +39,14 @@ public class TreeDisplay {
 	float off = 10;
 
 	Tree tree;
-	BudEvolutionScheme budEvolution;
 
 	public TreeDisplay() throws LWJGLException, IOException {
-		budEvolution = new SimplexBudEvolution();
 		tree = new Tree();
 		tree.calculate();
 
 		Display.setDisplayMode(new DisplayMode(768, 768));
+		Display.setLocation((1920 / 2) - (768 / 2), 1080 + (1080 / 2)
+				- (768 / 2));
 		Display.create();
 
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
@@ -118,54 +109,7 @@ public class TreeDisplay {
 			off += 1;
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
-			availableNutrition += 10;
-			System.out.println("EVOLVING");
-			List<PositionedMetamer> evolution = new ArrayList<PositionedMetamer>();
-			NodeIterator itr = new NodeIterator(tree.getRootMetamer());
-			while (itr.hasNext()) {
-				evolution.add(itr.next());
-			}
-			List<Entry<Float, PositionedMetamer>> possibleSteps = new ArrayList<Entry<Float, PositionedMetamer>>();
-			for (PositionedMetamer mm : evolution) {
-				PositionedMetamer mChild = budEvolution.getNextMetamer(mm);
-				if (mChild != null) {
-					float cost = budEvolution.getMetamerCost(mm, mChild);
-					possibleSteps
-							.add(new AbstractMap.SimpleEntry<Float, PositionedMetamer>(
-									Float.valueOf(cost), mChild));
-					mChild.calculate();
-				}
-			}
-			Collections.sort(possibleSteps,
-					new Comparator<Entry<Float, PositionedMetamer>>() {
-						@Override
-						public int compare(
-								Entry<Float, PositionedMetamer> arg0,
-								Entry<Float, PositionedMetamer> arg1) {
-							return Float.compare(arg0.getKey(), arg1.getKey());
-						}
-					});
-			System.out.println("Available nutrition: " + availableNutrition);
-			for (int i = 0; i < possibleSteps.size() && availableNutrition > 0; i++) {
-				if (availableNutrition > possibleSteps.get(i).getKey()) {
-					boolean clear = true;
-					for (PositionedMetamer mm : evolution) {
-						if (possibleSteps.get(i).getValue().getParent() != mm
-								&& mm.intersects(possibleSteps.get(i)
-										.getValue())) {
-							clear = false;
-							break;
-						}
-					}
-					if (clear) {
-						possibleSteps.get(i).getValue().getParent()
-								.addChild(possibleSteps.get(i).getValue());
-						availableNutrition -= possibleSteps.get(i).getKey();
-					}
-				}
-			}
-
-			tree.getRootMetamer().calculateRecursive();
+			tree.evolve();
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {

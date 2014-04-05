@@ -12,6 +12,23 @@ public class VoxelGrid<T> {
 		ensureLocation(initialSize, initialSize, initialSize);
 	}
 
+	public static void main(String[] args) {
+		// Run test
+		VoxelGrid<Object> voxel = new VoxelGrid<Object>(0.5f, 2);
+		voxel.putVoxel(-0.16270483f, -0.3138903f, 1.3535534f, new Object());
+		for (int i = 0; i < 25; i++) {
+			float x = (float) (Math.random() - 0.5) * 200.0f;
+			float y = (float) (Math.random() - 0.5) * 200.0f;
+			float z = (float) (Math.random() - 0.5) * 200.0f;
+			voxel.getVoxel(x, y, z);
+			Object obj = new Object();
+			voxel.putVoxel(x, y, z, obj);
+			if (voxel.getVoxel(x, y, z) != obj) {
+				System.out.println("ERROR @ " + x + "," + y + "," + z);
+			}
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	public T getVoxel(float x, float y, float z) {
 		int vX = (int) Math.floor((x - minimumPoint.x) / gridSize);
@@ -42,50 +59,55 @@ public class VoxelGrid<T> {
 			return;
 		}
 
-		if (minimumPoint.x > x || minimumPoint.y > y || minimumPoint.z > z) {
-			// Scale down. First recalculate minPoint
-			Vector3D oldMin = minimumPoint;
-			Object[][][] oldArray = dataArray;
+		// if (minimumPoint.x > x || minimumPoint.y > y || minimumPoint.z > z) {
+		// Scale down. First recalculate minPoint
+		Vector3D oldMin = minimumPoint;
+		Object[][][] oldArray = dataArray;
 
-			int vX = (int) Math.floor(x / gridSize);
-			int vY = (int) Math.floor(y / gridSize);
-			int vZ = (int) Math.floor(z / gridSize);
+		int vX = (int) Math.floor(x / gridSize);
+		int vY = (int) Math.floor(y / gridSize);
+		int vZ = (int) Math.floor(z / gridSize);
 
-			int growX = Math.max(0, 1 + (int) Math.ceil(oldMin.x / gridSize)
-					- vX);
-			int growY = Math.max(0, 1 + (int) Math.ceil(oldMin.y / gridSize)
-					- vY);
-			int growZ = Math.max(0, 1 + (int) Math.ceil(oldMin.z / gridSize)
-					- vZ);
+		int growX = Math.max(0, 1 + (int) Math.ceil(oldMin.x / gridSize) - vX);
+		int growY = Math.max(0, 1 + (int) Math.ceil(oldMin.y / gridSize) - vY);
+		int growZ = Math.max(0, 1 + (int) Math.ceil(oldMin.z / gridSize) - vZ);
 
-			dataArray = new Object[oldArray.length + growX][oldArray[0].length
-					+ growY][oldArray[0][0].length + growZ];
+		// Scale
+		int xSize = Math.max(dataArray.length,
+				(int) Math.ceil((x - minimumPoint.x) / gridSize) + 1);
+		int ySize = Math.max(dataArray[0].length,
+				(int) Math.ceil((y - minimumPoint.y) / gridSize) + 1);
+		int zSize = Math.max(dataArray[0][0].length,
+				(int) Math.ceil((z - minimumPoint.z) / gridSize) + 1);
 
-			for (int vx = 0; vx < oldArray.length; vx++) {
-				for (int vy = 0; vy < oldArray[vx].length; vy++) {
-					System.arraycopy(oldArray[vx][vy], 0,
-							dataArray[vx + growX][vy + growY], growZ,
-							oldArray[vx][vy].length);
-				}
-			}
+		dataArray = new Object[xSize + growX][ySize + growY][zSize + growZ];
 
-			minimumPoint = new Vector3D(vX, vY, vZ);
-		} else {
-			// Scale up
-			int xSize = Math.max(dataArray.length,
-					(int) Math.ceil((x - minimumPoint.x) / gridSize) + 1);
-			int ySize = Math.max(dataArray[0].length,
-					(int) Math.ceil((y - minimumPoint.y) / gridSize) + 1);
-			int zSize = Math.max(dataArray[0][0].length,
-					(int) Math.ceil((z - minimumPoint.z) / gridSize) + 1);
-			Object[][][] oldArray = dataArray;
-			dataArray = new Object[xSize][ySize][zSize];
-			for (int vx = 0; vx < oldArray.length; vx++) {
-				for (int vy = 0; vy < oldArray[vx].length; vy++) {
-					System.arraycopy(oldArray[vx][vy], 0, dataArray[vx][vy], 0,
-							oldArray[vx][vy].length);
-				}
+		for (int vx = 0; vx < oldArray.length; vx++) {
+			for (int vy = 0; vy < oldArray[vx].length; vy++) {
+				System.arraycopy(oldArray[vx][vy], 0, dataArray[vx + growX][vy
+						+ growY], growZ, oldArray[vx][vy].length);
 			}
 		}
+
+		minimumPoint = new Vector3D(growX == 0 ? minimumPoint.x : vX,
+				growY == 0 ? minimumPoint.y : vY, growZ == 0 ? minimumPoint.z
+						: vZ);
+		// } else {
+		// // Scale up
+		// int xSize = Math.max(dataArray.length,
+		// (int) Math.ceil((x - minimumPoint.x) / gridSize) + 1);
+		// int ySize = Math.max(dataArray[0].length,
+		// (int) Math.ceil((y - minimumPoint.y) / gridSize) + 1);
+		// int zSize = Math.max(dataArray[0][0].length,
+		// (int) Math.ceil((z - minimumPoint.z) / gridSize) + 1);
+		// Object[][][] oldArray = dataArray;
+		// dataArray = new Object[xSize][ySize][zSize];
+		// for (int vx = 0; vx < oldArray.length; vx++) {
+		// for (int vy = 0; vy < oldArray[vx].length; vy++) {
+		// System.arraycopy(oldArray[vx][vy], 0, dataArray[vx][vy], 0,
+		// oldArray[vx][vy].length);
+		// }
+		// }
+		// }
 	}
 }
