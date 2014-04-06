@@ -15,7 +15,6 @@ public class VoxelGrid<T> {
 	public static void main(String[] args) {
 		// Run test
 		VoxelGrid<Object> voxel = new VoxelGrid<Object>(0.5f, 2);
-		voxel.putVoxel(-0.16270483f, -0.3138903f, 1.3535534f, new Object());
 		for (int i = 0; i < 25; i++) {
 			float x = (float) (Math.random() - 0.5) * 200.0f;
 			float y = (float) (Math.random() - 0.5) * 200.0f;
@@ -27,6 +26,10 @@ public class VoxelGrid<T> {
 				System.out.println("ERROR @ " + x + "," + y + "," + z);
 			}
 		}
+	}
+
+	public float getGridSize() {
+		return gridSize;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -46,7 +49,14 @@ public class VoxelGrid<T> {
 		int vX = (int) Math.floor((x - minimumPoint.x) / gridSize);
 		int vY = (int) Math.floor((y - minimumPoint.y) / gridSize);
 		int vZ = (int) Math.floor((z - minimumPoint.z) / gridSize);
-		dataArray[vX][vY][vZ] = obj;
+		try {
+			dataArray[vX][vY][vZ] = obj;
+		} catch (Exception e) {
+			System.out.println(vX + "," + vY + "," + vZ);
+			System.out.println(dataArray.length + "," + dataArray[0].length
+					+ "," + dataArray[0][0].length);
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void ensureLocation(float x, float y, float z) {

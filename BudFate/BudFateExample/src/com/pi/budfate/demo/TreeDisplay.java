@@ -21,8 +21,11 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 
+import com.pi.senior.budfate.impl.light.LightGradientUtil;
 import com.pi.senior.budfate.tree.PositionedMetamer;
 import com.pi.senior.budfate.tree.Tree;
+import com.pi.senior.budfate.tree.TreeVoxel;
+import com.pi.senior.math.Vector3D;
 
 public class TreeDisplay {
 	private static double horizontalTan = Math.tan(Math.toRadians(25));
@@ -86,6 +89,27 @@ public class TreeDisplay {
 		GL11.glColor3f(1f, 0f, 0f);
 		GL11.glBegin(GL11.GL_LINES);
 		drawMetamer(tree.getRootMetamer());
+		GL11.glEnd();
+		GL11.glBegin(GL11.GL_LINES);
+		for (float x = -10; x <= 10; x += tree.getVoxelGrid().getGridSize()) {
+			for (float y = -10; y <= 10; y += tree.getVoxelGrid().getGridSize()) {
+				for (float z = 0; z <= 15; z += tree.getVoxelGrid()
+						.getGridSize()) {
+					TreeVoxel vv = tree.getVoxelGrid().getVoxel(x, y, z);
+					if (vv != null) {
+//						Vector3D gradient = LightGradientUtil
+//								.getShadowGradient(tree.getVoxelGrid(),
+//										new Vector3D(x, y, z)).normalize()
+//								.multiply(-1f);
+//						GL11.glColor3f(0f, 0f, 1f);
+//						GL11.glVertex3f(x, y, z);
+//						GL11.glColor3f(0f, 1f, 0f);
+//						GL11.glVertex3f(x + gradient.x, y + gradient.y, z
+//								+ gradient.z);
+					}
+				}
+			}
+		}
 		GL11.glEnd();
 
 		Display.update();

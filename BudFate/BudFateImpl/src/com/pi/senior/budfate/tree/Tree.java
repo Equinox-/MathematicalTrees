@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.pi.senior.budfate.api.BudEvolutionScheme;
-import com.pi.senior.budfate.impl.SimplexBudEvolution;
+import com.pi.senior.budfate.impl.light.LightGradientEvolution;
+import com.pi.senior.budfate.impl.light.LightGradientUtil;
 import com.pi.senior.math.Vector3D;
 import com.pi.senior.math.VoxelGrid;
 import com.pi.senior.util.NodeIterator;
@@ -27,8 +28,8 @@ public class Tree {
 	public Tree() {
 		rootMetamer = new PositionedMetamer(MetamerType.TERMINAL, new Vector3D(
 				0, 0, 0), new Vector3D(0, 0, 1));
-		voxelGrid = new VoxelGrid<TreeVoxel>(1f, 5);
-		budEvolution = new SimplexBudEvolution();
+		voxelGrid = new VoxelGrid<TreeVoxel>(.5f, 5);
+		budEvolution = new LightGradientEvolution(voxelGrid);
 	}
 
 	public void calculate() {
@@ -75,29 +76,35 @@ public class Tree {
 				});
 		System.out.println("Available nutrition: " + nutrition);
 		for (int i = 0; i < possibleSteps.size() && nutrition > 0; i++) {
-			if (nutrition > possibleSteps.get(i).getKey()) {
+			//if (nutrition > possibleSteps.get(i).getKey()) {
 				PositionedMetamer metamer = possibleSteps.get(i).getValue();
 				Vector3D voxelLocation = metamer.getNodeStart().clone()
 						.subtract(metamer.getNodeEnd()).multiply(.5f)
 						.add(metamer.getNodeEnd());
 				TreeVoxel treeVoxel = voxelGrid.getVoxel(voxelLocation.x,
 						voxelLocation.y, voxelLocation.z);
-				if (treeVoxel == null || !treeVoxel.isOccupied) {
+				if (treeVoxel == null || treeVoxel.livingHere == null
+						|| treeVoxel.livingHere == metamer.getParent()) {
 					if (treeVoxel != null) {
-						treeVoxel.isOccupied = true;
+						treeVoxel.livingHere = metamer;
 					} else {
 						treeVoxel = new TreeVoxel();
-						treeVoxel.isOccupied = true;
+						treeVoxel.livingHere = metamer;
 						voxelGrid.putVoxel(voxelLocation.x, voxelLocation.y,
 								voxelLocation.z, treeVoxel);
 					}
-					possibleSteps.get(i).getValue().getParent()
-							.addChild(metamer);
-					nutrition -= possibleSteps.get(i).getKey();
+					metamer.getParent().addChild(metamer);
+					LightGradientUtil.applyShadow(voxelGrid, voxelLocation,
+							1.0f, 1f);
+				//	nutrition -= possibleSteps.get(i).getKey();
 				}
-			}
+			//}
 		}
 
 		getRootMetamer().calculateRecursive();
+	}
+
+	public VoxelGrid<TreeVoxel> getVoxelGrid() {
+		return voxelGrid;
 	}
 }
